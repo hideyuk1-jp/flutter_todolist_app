@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_todolist_app/sharedPref.dart';
+import 'task.dart';
 
 void main() {
   runApp(MyApp());
@@ -28,23 +30,70 @@ class TaskPage extends StatefulWidget {
   _TaskPageState createState() => _TaskPageState();
 }
 
-class _TaskPageState extends State<TaskPage> {
+class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
+  List<Task> _tasks = <Task>[];
+  final _textController = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+  bool _isComposing = false;
+
+  SharedPref sharedPref = SharedPref();
+
+  void _init() async {
+    _tasks = await sharedPref.read();
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _init();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body: Center(
+      body: Container(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              'test',
-              style: Theme.of(context).textTheme.headline4,
+            Flexible(
+              child: ListView.builder(
+                padding: EdgeInsets.all(8.0),
+                itemBuilder: (_, int index) {
+                  return Container(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            icon: Icon(_tasks[index].completedAt == null
+                                ? Icons.check_box_outline_blank
+                                : Icons.check_box),
+                            onPressed: () => _handleCompleted(
+                                index, _tasks[index].completedAt != null),
+                          ),
+                        ),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              //Text(_name, style: Theme.of(context).textTheme.headline4),
+                              Container(
+                                margin: EdgeInsets.all(12.0),
+                                child: Text(_tasks[index].text),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                itemCount: _tasks.length,
+              ),
             ),
           ],
         ),
@@ -58,31 +107,49 @@ class _TaskPageState extends State<TaskPage> {
               borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
             ),
             builder: (BuildContext context) {
-              return SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Container(
-                    padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).viewInsets.bottom),
-                    child: Row(
-                      children: <Widget>[
-                        Flexible(
-                          child: TextField(
-                            autofocus: true,
-                            decoration: InputDecoration(hintText: 'タスクを追加'),
+              return StatefulBuilder(builder: (BuildContext context, setState) {
+                return SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Container(
+                      padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewInsets.bottom),
+                      child: Row(
+                        children: <Widget>[
+                          Flexible(
+                            child: TextField(
+                              controller: _textController,
+                              onChanged: (String text) {
+                                setState(() {
+                                  _isComposing = text.length > 0;
+                                });
+                              },
+                              onSubmitted: _isComposing
+                                  ? (String text) =>
+                                      _handleSubmitted(text, context)
+                                  : null,
+                              autofocus: true,
+                              decoration:
+                                  InputDecoration.collapsed(hintText: 'タスクを追加'),
+                              focusNode: _focusNode,
+                            ),
                           ),
-                        ),
-                        Container(
-                          child: IconButton(
-                            icon: const Icon(Icons.send),
-                            onPressed: null,
+                          Container(
+                            child: IconButton(
+                              icon: const Icon(Icons.send),
+                              color: Colors.blue,
+                              onPressed: _isComposing
+                                  ? () => _handleSubmitted(
+                                      _textController.text, context)
+                                  : null,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
+                );
+              });
             },
           );
         },
@@ -90,5 +157,31 @@ class _TaskPageState extends State<TaskPage> {
         child: Icon(Icons.add),
       ),
     );
+  }
+
+  void _handleSubmitted(String text, BuildContext context) {
+    _textController.clear();
+    setState(() {
+      _isComposing = false;
+    });
+    Task task = Task.fromMap({'text': text, 'completed_at': null});
+    setState(() {
+      _tasks.add(task);
+    });
+    sharedPref.save(_tasks);
+    _focusNode.requestFocus();
+    Navigator.pop(context);
+  }
+
+  void _handleCompleted(int index, bool isCompleted) {
+    setState(() {
+      if (isCompleted) {
+        _tasks[index].completedAt = null;
+      } else {
+        final now = DateTime.now();
+        _tasks[index].completedAt = now.toUtc().toIso8601String();
+      }
+    });
+    sharedPref.save(_tasks);
   }
 }
