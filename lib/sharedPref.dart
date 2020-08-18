@@ -4,11 +4,12 @@ import 'package:uuid/uuid.dart';
 import 'task.dart';
 
 class SharedPref {
-  static final taskItemsKey = 'task_items';
+  static final tasksKey = 'tasks';
 
+  //---------- Task ----------
   readTasks() async {
     final prefs = await SharedPreferences.getInstance();
-    final items = prefs.getString(taskItemsKey);
+    final items = prefs.getString(tasksKey);
     if (items == null) return <Task>[];
     List<Map<String, dynamic>> jsonArray =
         json.decode(items).cast<Map<String, dynamic>>();
@@ -31,7 +32,7 @@ class SharedPref {
 
   saveTasks(List<Task> tasks) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString(taskItemsKey, json.encode(tasks));
+    prefs.setString(tasksKey, json.encode(tasks));
   }
 
   editTask(Task task) async {
