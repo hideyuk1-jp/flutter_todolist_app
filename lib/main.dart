@@ -32,21 +32,29 @@ class TaskPage extends StatefulWidget {
 
 class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
   List<Task> _tasks = <Task>[];
+  List<Task> _completedTasks = <Task>[];
+  List<Task> _incompletedTasks = <Task>[];
   final _textController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   bool _isComposing = false;
 
   SharedPref sharedPref = SharedPref();
 
-  void _init() async {
-    _tasks = await sharedPref.read();
-    setState(() {});
+  void _loadTasks() async {
+    List<Task> tasks = await sharedPref.readTasks();
+    setState(() {
+      _tasks = tasks;
+      _completedTasks =
+          tasks.where((item) => item.completedAt != null).toList();
+      _incompletedTasks =
+          tasks.where((item) => item.completedAt == null).toList();
+    });
   }
 
   @override
   void initState() {
     super.initState();
-    _init();
+    _loadTasks();
   }
 
   @override
@@ -69,11 +77,12 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
                         Container(
                           child: IconButton(
                             padding: EdgeInsets.zero,
-                            icon: Icon(_tasks[index].completedAt == null
-                                ? Icons.check_box_outline_blank
-                                : Icons.check_box),
-                            onPressed: () => _handleCompleted(
-                                index, _tasks[index].completedAt != null),
+                            icon: Icon(
+                                _incompletedTasks[index].completedAt == null
+                                    ? Icons.check_box_outline_blank
+                                    : Icons.check_box),
+                            onPressed: () =>
+                                _handleCompleted(_incompletedTasks[index]),
                           ),
                         ),
                         Expanded(
@@ -83,7 +92,7 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
                               //Text(_name, style: Theme.of(context).textTheme.headline4),
                               Container(
                                 margin: EdgeInsets.all(12.0),
-                                child: Text(_tasks[index].text),
+                                child: Text(_incompletedTasks[index].text),
                               ),
                             ],
                           ),
@@ -92,7 +101,7 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
                     ),
                   );
                 },
-                itemCount: _tasks.length,
+                itemCount: _incompletedTasks.length,
               ),
             ),
           ],
@@ -159,29 +168,26 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
     );
   }
 
-  void _handleSubmitted(String text, BuildContext context) {
+  void _handleSubmitted(String text, BuildContext context) async {
     _textController.clear();
     setState(() {
       _isComposing = false;
     });
-    Task task = Task.fromMap({'text': text, 'completed_at': null});
-    setState(() {
-      _tasks.add(task);
-    });
-    sharedPref.save(_tasks);
+    Task task = Task.fromMap({'text': text});
+    await sharedPref.createTask(task);
     _focusNode.requestFocus();
+    _loadTasks();
     Navigator.pop(context);
   }
 
-  void _handleCompleted(int index, bool isCompleted) {
-    setState(() {
-      if (isCompleted) {
-        _tasks[index].completedAt = null;
-      } else {
-        final now = DateTime.now();
-        _tasks[index].completedAt = now.toUtc().toIso8601String();
-      }
-    });
-    sharedPref.save(_tasks);
+  void _handleCompleted(Task task) async {
+    if (task.completedAt != null) {
+      task.completedAt = null;
+    } else {
+      final now = DateTime.now();
+      task.completedAt = now.toUtc();
+    }
+    await sharedPref.editTask(task);
+    _loadTasks();
   }
 }
