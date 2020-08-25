@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:flutter_todolist_app/sharedPref.dart';
 import 'package:intl/intl.dart';
-import 'task.dart';
+
+import 'package:flutter_todolist_app/Repositories/TaskRepository.dart';
+import 'package:flutter_todolist_app/Services/TaskService.dart';
+import 'package:flutter_todolist_app/Models/Task.dart';
 
 void main() {
   runApp(MyApp());
@@ -30,8 +34,6 @@ class TaskPage extends StatefulWidget {
 }
 
 class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
-  List<Task> _tasks = <Task>[];
-  List<Task> _completedTasks = <Task>[];
   List<Task> _incompletedTasks = <Task>[];
 
   final _textController = TextEditingController();
@@ -40,16 +42,13 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
   DateTime _dueDate = new DateTime.now();
   // int _estimatedMinutes = 5;
 
-  SharedPref sharedPref = SharedPref();
+  TaskService _taskService = TaskService(new TaskRepository());
 
   void _loadTasks() async {
-    List<Task> tasks = await sharedPref.readTasks();
+    List<Task> _tasks = await _taskService.getIncompletedTasks();
+    print(json.encode(_tasks));
     setState(() {
-      _tasks = tasks;
-      _completedTasks =
-          tasks.where((item) => item.completedAt != null).toList();
-      _incompletedTasks =
-          tasks.where((item) => item.completedAt == null).toList();
+      _incompletedTasks = _tasks;
     });
   }
 
@@ -67,7 +66,6 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
     Map<int, String> conv = {-1: '昨日', 0: '今日', 1: '明日', 2: '明後日'};
     for (int key in conv.keys) {
       DateTime cdate = today.add(new Duration(days: key));
-      print(DateFormat('yyyy年M月d日').format(cdate));
       if (date.year == cdate.year &&
           date.month == cdate.month &&
           date.day == cdate.day) return conv[key];
@@ -277,27 +275,19 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
 
   void _handleSubmitted(
       String text, DateTime dueDate, BuildContext context) async {
+    await _taskService.create(text, dueDate);
     _textController.clear();
     setState(() {
       _isComposing = false;
       _dueDate = new DateTime.now();
     });
-    Task task = Task.fromMap(
-        {'text': text, 'due_date': DateFormat('yyyy-MM-dd').format(dueDate)});
-    await sharedPref.createTask(task);
     _focusNode.requestFocus();
     _loadTasks();
     Navigator.pop(context);
   }
 
   void _handleCompleted(Task task) async {
-    if (task.completedAt != null) {
-      task.completedAt = null;
-    } else {
-      final now = DateTime.now();
-      task.completedAt = now.toUtc();
-    }
-    await sharedPref.editTask(task);
+    await _taskService.toggleComplete(task.uuid);
     _loadTasks();
   }
 }
