@@ -38,7 +38,6 @@ class TaskService implements TaskServiceInterface {
   }
 
   Future<Map<String, List<Task>>> getIncompletedTasksGroupedByDueDate() async {
-    final int cnt = 3;
     List<Task> tasks = await getIncompletedTasks();
     final today =
         DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
@@ -55,23 +54,26 @@ class TaskService implements TaskServiceInterface {
     return tasksGroupedByDueDate;
   }
 
-  Future create(String text, DateTime dueDate) async {
+  Future create(String text, DateTime dueDate, int estimatedMinutes) async {
     final now = DateTime.now();
     Task task = new Task.fromMap({
       'uuid': Uuid().v4(),
       'text': text,
       'due_date': DateFormat('yyyy-MM-dd').format(dueDate),
+      'estimated_minutes': estimatedMinutes,
       'created_at': now.toUtc(),
       'updated_at': now.toUtc()
     });
     await _taskRepository.create(task);
   }
 
-  Future update(String uuid, String text, DateTime dueDate) async {
+  Future update(
+      String uuid, String text, DateTime dueDate, int estimatedMinutes) async {
     final now = DateTime.now();
     Task task = await getTaskByUuid(uuid);
     task.text = text;
     task.dueDate = DateFormat('yyyy-MM-dd').format(dueDate);
+    task.estimatedMinutes = estimatedMinutes;
     task.updatedAt = now.toUtc();
     await _taskRepository.update(task);
   }

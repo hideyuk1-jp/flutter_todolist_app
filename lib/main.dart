@@ -47,7 +47,7 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
   final FocusNode _focusNode = FocusNode();
   bool _isComposing = false;
   DateTime _dueDate = new DateTime.now();
-  // int _estimatedMinutes = 5;
+  double _estimatedMinutes = 0.0;
 
   TaskService _taskService = TaskService(new TaskRepository());
 
@@ -67,6 +67,39 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
         firstDate: new DateTime(2016),
         lastDate: new DateTime.now().add(new Duration(days: 360)));
     if (picked != null) setState(() => _dueDate = picked);
+  }
+
+  void openDialog(BuildContext context, setState) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (BuildContext context, setState) {
+          return SimpleDialog(
+            title: Text(
+              'タスクの完了にかかる時間',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16),
+            ),
+            children: <Widget>[
+              Slider(
+                value: _estimatedMinutes,
+                label: _estimatedMinutes > 0
+                    ? _estimatedMinutes.round().toString() + '分'
+                    : '時間なし',
+                min: 0,
+                max: 360,
+                divisions: 72,
+                onChanged: (double value) {
+                  setState(() {
+                    _estimatedMinutes = value;
+                  });
+                },
+              )
+            ],
+          );
+        });
+      },
+    );
   }
 
   String _dateFormatter(DateTime date) {
@@ -102,6 +135,8 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
           children: _mapTasks.entries.map((e) {
             String key = e.key;
             List<Task> tasks = e.value;
+            int etSum = tasks.fold(
+                0, (value, task) => value + (task.estimatedMinutes ?? 0));
             if (tasks.length == 0) return Container();
             return Container(
               key: Key(key),
@@ -136,6 +171,24 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
                                     ? Colors.black
                                     : Colors.pink,
                               ),
+                            ),
+                            Spacer(),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                Icon(
+                                  Icons.timer,
+                                  size: 18,
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(right: 4.0),
+                                ),
+                                Text('${etSum.toString()}分 (${tasks.length}個)'),
+                              ],
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(right: 4.0),
                             ),
                           ],
                         ),
@@ -227,8 +280,11 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
                               });
                             },
                             onSubmitted: _isComposing
-                                ? (String text) =>
-                                    _handleSubmitted(text, _dueDate, context)
+                                ? (String text) => _handleSubmitted(
+                                    text,
+                                    _dueDate,
+                                    _estimatedMinutes.round(),
+                                    context)
                                 : null,
                             autofocus: true,
                             decoration:
@@ -263,7 +319,7 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
                                   ),
                                 ),
                               ),
-                              /*Padding(padding: EdgeInsets.only(right: 8.0)),
+                              Padding(padding: EdgeInsets.only(right: 8.0)),
                               Container(
                                 child: OutlineButton.icon(
                                   icon: Icon(
@@ -271,20 +327,24 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
                                     size: 16.0,
                                   ),
                                   label: Text(
-                                    "時間なし",
+                                    _estimatedMinutes > 0
+                                        ? _estimatedMinutes.round().toString() +
+                                            '分'
+                                        : '時間なし',
                                     style: TextStyle(
                                       fontSize: 14,
                                       letterSpacing: -0.8,
                                     ),
                                   ),
-                                  onPressed: () {},
+                                  onPressed: () =>
+                                      openDialog(context, setState),
                                   color: Colors.green,
                                   shape: OutlineInputBorder(
                                     borderRadius:
                                         BorderRadius.all(Radius.circular(8.0)),
                                   ),
                                 ),
-                              ),*/
+                              ),
                               Spacer(),
                               Container(
                                 child: IconButton(
@@ -294,6 +354,7 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
                                       ? () => _handleSubmitted(
                                           _textController.text,
                                           _dueDate,
+                                          _estimatedMinutes.round(),
                                           context)
                                       : null,
                                 ),
@@ -315,13 +376,14 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
     );
   }
 
-  void _handleSubmitted(
-      String text, DateTime dueDate, BuildContext context) async {
-    await _taskService.create(text, dueDate);
+  void _handleSubmitted(String text, DateTime dueDate, int estimatedMiutes,
+      BuildContext context) async {
+    await _taskService.create(text, dueDate, estimatedMiutes);
     _textController.clear();
     setState(() {
       _isComposing = false;
       _dueDate = new DateTime.now();
+      _estimatedMinutes = 0.0;
     });
     _focusNode.requestFocus();
     _loadTasks();
