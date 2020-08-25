@@ -1,7 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:flutter_todolist_app/Repositories/TaskRepository.dart';
 import 'package:flutter_todolist_app/Services/TaskService.dart';
@@ -22,6 +21,14 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: TaskPage(),
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale("en"),
+        const Locale("ja"),
+      ],
     );
   }
 }
@@ -34,7 +41,7 @@ class TaskPage extends StatefulWidget {
 }
 
 class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
-  List<Task> _incompletedTasks = <Task>[];
+  Map<String, List<Task>> _mapTasks = {};
 
   final _textController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
@@ -45,16 +52,17 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
   TaskService _taskService = TaskService(new TaskRepository());
 
   void _loadTasks() async {
-    List<Task> _tasks = await _taskService.getIncompletedTasks();
-    print(json.encode(_tasks));
+    Map<String, List<Task>> _map =
+        await _taskService.getIncompletedTasksGroupedByDueDate();
     setState(() {
-      _incompletedTasks = _tasks;
+      _mapTasks = _map;
     });
   }
 
   Future<Null> _selectDueDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
         context: context,
+        locale: const Locale("ja"),
         initialDate: _dueDate,
         firstDate: new DateTime(2016),
         lastDate: new DateTime.now().add(new Duration(days: 360)));
@@ -89,73 +97,108 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
         ),
       ),
       body: Container(
-        child: Column(
-          children: <Widget>[
-            Container(
-              padding: EdgeInsets.only(
-                  top: 16.0, right: 12.0, bottom: 16.0, left: 12.0),
-              child: Container(
-                child: Align(
-                  alignment: Alignment.topLeft,
-                  child: Text(
-                    '今日 : 8月24日(月)',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+        child: ListView(
+          padding: EdgeInsets.only(bottom: 80.0),
+          children: _mapTasks.entries.map((e) {
+            String key = e.key;
+            List<Task> tasks = e.value;
+            if (tasks.length == 0) return Container();
+            return Container(
+              key: Key(key),
+              child: Column(
+                children: <Widget>[
+                  Container(
+                    padding: EdgeInsets.only(
+                        top: 16.0, right: 12.0, bottom: 16.0, left: 12.0),
+                    child: Container(
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            key == 'overdue'
+                                ? Icon(
+                                    Icons.local_fire_department,
+                                    color: Colors.pink,
+                                  )
+                                : Container(),
+                            Padding(
+                              padding: EdgeInsets.only(right: 4.0),
+                            ),
+                            Text(
+                              key != 'overdue'
+                                  ? _dateFormatter(DateTime.parse(key))
+                                  : '期限切れ',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: key != 'overdue'
+                                    ? Colors.black
+                                    : Colors.pink,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: _incompletedTasks.map((Task task) {
-                  return Card(
-                    key: Key(task.uuid),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.only(top: 1.0),
-                          child: IconButton(
-                            icon: Icon(task.completedAt == null
-                                ? Icons.radio_button_unchecked
-                                : Icons.check_box),
-                            onPressed: () => _handleCompleted(task),
-                            enableFeedback: false,
-                          ),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                                top: 12.0, right: 12.0, bottom: 12.0),
-                            child: Text(
-                              task.text,
-                              style: TextStyle(fontSize: 16),
+                  ListView(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    children: tasks.map((Task task) {
+                      return Card(
+                        key: Key(task.uuid),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Padding(
+                              padding: EdgeInsets.only(top: 0.0),
+                              child: IconButton(
+                                icon: Icon(
+                                  task.completedAt == null
+                                      ? Icons.radio_button_unchecked
+                                      : Icons.check_box,
+                                  color: Colors.grey[600],
+                                ),
+                                onPressed: () => _handleCompleted(task),
+                                enableFeedback: false,
+                              ),
                             ),
-                          ),
+                            Expanded(
+                              child: Padding(
+                                padding: EdgeInsets.only(
+                                    top: 10.0, right: 12.0, bottom: 10.0),
+                                child: Text(
+                                  task.text,
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: EdgeInsets.only(top: 0.0),
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.more_vert,
+                                  color: Colors.grey[600],
+                                ),
+                                onPressed: () => print('Press!'),
+                                enableFeedback: false,
+                              ),
+                            ),
+                            // タップでEタスクのdit画面へ
+                          ],
                         ),
-                        Padding(
-                          padding: EdgeInsets.only(top: 1.0),
-                          child: IconButton(
-                            icon: Icon(Icons.more_vert),
-                            onPressed: () => print('Press!'),
-                            enableFeedback: false,
-                          ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8.0)),
                         ),
-                        // タップでEタスクのdit画面へ
-                      ],
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                    ),
-                  );
-                }).toList(),
+                      );
+                    }).toList(),
+                  ),
+                ],
               ),
-            ),
-          ],
+            );
+          }).toList(),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -206,7 +249,6 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
                                   ),
                                   label: Text(
                                     _dateFormatter(_dueDate),
-                                    //DateFormat('yyyy年M月d日').format(_dueDate),
                                     style: TextStyle(
                                       color: Colors.green,
                                       fontSize: 14,

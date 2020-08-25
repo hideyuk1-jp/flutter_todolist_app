@@ -33,18 +33,24 @@ class TaskService implements TaskServiceInterface {
   Future<List<Task>> getIncompletedTasks() async {
     List<Task> tasks = await getTasks();
     tasks = tasks.where((task) => task.completedAt == null).toList();
+    tasks.sort((task1, task2) => task1.dueDate.compareTo(task2.dueDate));
     return tasks;
   }
 
-  // TODO: 未完成
   Future<Map<String, List<Task>>> getIncompletedTasksGroupedByDueDate() async {
+    final int cnt = 3;
     List<Task> tasks = await getIncompletedTasks();
-    final now = DateTime.now();
+    final today =
+        DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
     Map<String, List<Task>> tasksGroupedByDueDate = {};
     for (Task task in tasks) {
-      for (int diff = 0; diff < 7; ++diff) {}
-      DateTime dueDate = DateTime.parse(task.dueDate);
-      print(now.difference(dueDate).inDays);
+      String key = DateTime.parse(task.dueDate).isBefore(today)
+          ? 'overdue'
+          : task.dueDate;
+      if (tasksGroupedByDueDate.containsKey(key))
+        tasksGroupedByDueDate[key].add(task);
+      else
+        tasksGroupedByDueDate[key] = [task];
     }
     return tasksGroupedByDueDate;
   }
