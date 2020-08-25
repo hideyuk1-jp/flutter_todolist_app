@@ -88,7 +88,7 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
                     : '時間なし',
                 min: 0,
                 max: 360,
-                divisions: 72,
+                divisions: 24,
                 onChanged: (double value) {
                   setState(() {
                     _estimatedMinutes = value;
@@ -223,8 +223,88 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
                               child: Padding(
                                 padding: EdgeInsets.only(
                                     top: 10.0, right: 12.0, bottom: 10.0),
-                                child: Text(
-                                  task.text,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(
+                                      task.text,
+                                    ),
+                                    Padding(
+                                        padding: EdgeInsets.only(bottom: 8.0)),
+                                    Row(
+                                      children: <Widget>[
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: 4.0, horizontal: 12.0),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: Colors.grey[300],
+                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(8.0),
+                                          ),
+                                          child: Row(
+                                            children: <Widget>[
+                                              Icon(
+                                                Icons.calendar_today,
+                                                color: Colors.green,
+                                                size: 16.0,
+                                              ),
+                                              Padding(
+                                                  padding: EdgeInsets.only(
+                                                      right: 8.0)),
+                                              Text(
+                                                _dateFormatter(DateTime.parse(
+                                                    task.dueDate)),
+                                                style: TextStyle(
+                                                  color: Colors.green,
+                                                  fontSize: 13,
+                                                  letterSpacing: -0.8,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Padding(
+                                            padding:
+                                                EdgeInsets.only(right: 8.0)),
+                                        Container(
+                                          padding: EdgeInsets.symmetric(
+                                              vertical: 4.0, horizontal: 12.0),
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: Colors.grey[300],
+                                            ),
+                                            borderRadius:
+                                                BorderRadius.circular(8.0),
+                                          ),
+                                          child: Row(
+                                            children: <Widget>[
+                                              Icon(
+                                                Icons.timer,
+                                                size: 16.0,
+                                              ),
+                                              Padding(
+                                                  padding: EdgeInsets.only(
+                                                      right: 8.0)),
+                                              Text(
+                                                (task.estimatedMinutes ?? 0) > 0
+                                                    ? task.estimatedMinutes
+                                                            .round()
+                                                            .toString() +
+                                                        '分'
+                                                    : '時間なし',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  letterSpacing: -0.8,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
