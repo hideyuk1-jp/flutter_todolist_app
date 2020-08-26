@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: TaskPage(),
+      home: HomePage(),
       localizationsDelegates: [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -31,6 +31,45 @@ class MyApp extends StatelessWidget {
       ],
     );
   }
+}
+
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _currentIndex = 0;
+  final _pageWidgets = [
+    TaskPage(),
+    Container(
+      child: Text('完了タスク一覧建設予定地'),
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Center(
+          child: Icon(Icons.style),
+        ),
+      ),
+      body: _pageWidgets.elementAt(_currentIndex),
+      bottomNavigationBar: BottomNavigationBar(
+        items: <BottomNavigationBarItem>[
+          BottomNavigationBarItem(icon: Icon(Icons.inbox), title: Text('未完了')),
+          BottomNavigationBarItem(icon: Icon(Icons.check), title: Text('完了')),
+        ],
+        currentIndex: _currentIndex,
+        fixedColor: Colors.blueAccent,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
+      ),
+    );
+  }
+
+  void _onItemTapped(int index) => setState(() => _currentIndex = index);
 }
 
 class TaskPage extends StatefulWidget {
@@ -75,213 +114,244 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+      /*appBar: AppBar(
         title: Center(
           child: Icon(Icons.style),
         ),
-      ),
-      body: Container(
-        padding: EdgeInsets.all(4.0),
-        child: ListView(
-          padding: EdgeInsets.only(bottom: 80.0),
-          children: _mapTasks.entries.map((e) {
-            String key = e.key;
-            List<Task> tasks = e.value;
-            int etSum = tasks.fold(
-                0, (value, task) => value + (task.estimatedMinutes ?? 0));
-            if (tasks.length == 0) return Container();
-            return Container(
-              key: Key(key),
-              child: Column(
-                children: <Widget>[
-                  Container(
-                    padding: EdgeInsets.only(
-                        top: 16.0, right: 12.0, bottom: 16.0, left: 12.0),
-                    child: Container(
-                      child: Align(
-                        alignment: Alignment.topLeft,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: <Widget>[
-                            key == 'overdue'
-                                ? Icon(
-                                    Icons.local_fire_department,
-                                    color: Colors.pink,
-                                  )
-                                : Container(),
-                            Padding(
-                              padding: EdgeInsets.only(right: 4.0),
-                            ),
-                            Text(
-                              key != 'overdue'
-                                  ? _dateFormatter(DateTime.parse(key))
-                                  : '期限切れ',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: key != 'overdue'
-                                    ? Colors.black
-                                    : Colors.pink,
-                              ),
-                            ),
-                            Spacer(),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                Icon(
-                                  Icons.timer,
-                                  size: 18,
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(right: 4.0),
-                                ),
-                                Text('${etSum.toString()}分 (${tasks.length}個)'),
-                              ],
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(right: 4.0),
-                            ),
-                          ],
-                        ),
-                      ),
+      ),*/
+      body: _mapTasks.length == 0
+          ? Center(
+              child: Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Icon(
+                      Icons.wb_sunny,
+                      size: 48,
+                      color: Colors.orange,
                     ),
-                  ),
-                  ListView(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    children: tasks.map((Task task) {
-                      return Card(
-                        key: Key(task.uuid),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                        ),
-                        child: InkWell(
-                          onTap: () => _openUpdateFormModal(task),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: <Widget>[
-                              Padding(
-                                padding: EdgeInsets.only(top: 0.0),
-                                child: IconButton(
-                                  icon: Icon(
-                                    task.completedAt == null
-                                        ? Icons.radio_button_unchecked
-                                        : Icons.check_box,
-                                    color: Colors.grey[600],
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 16.0),
+                    ),
+                    Text('未完了のタスクはありません'),
+                  ],
+                ),
+              ),
+            )
+          : Container(
+              padding: EdgeInsets.all(4.0),
+              child: ListView(
+                padding: EdgeInsets.only(bottom: 80.0),
+                children: _mapTasks.entries.map((e) {
+                  String key = e.key;
+                  List<Task> tasks = e.value;
+                  int etSum = tasks.fold(
+                      0, (value, task) => value + (task.estimatedMinutes ?? 0));
+                  if (tasks.length == 0) return Container();
+                  return Container(
+                    key: Key(key),
+                    child: Column(
+                      children: <Widget>[
+                        Container(
+                          padding: EdgeInsets.only(
+                              top: 16.0, right: 12.0, bottom: 16.0, left: 12.0),
+                          child: Container(
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: <Widget>[
+                                  key == 'overdue'
+                                      ? Icon(
+                                          Icons.local_fire_department,
+                                          color: Colors.pink,
+                                        )
+                                      : Container(),
+                                  Padding(
+                                    padding: EdgeInsets.only(right: 4.0),
                                   ),
-                                  onPressed: () => _handleCompleted(task),
-                                  enableFeedback: false,
-                                ),
-                              ),
-                              Expanded(
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                      top: 10.0, right: 12.0, bottom: 10.0),
-                                  child: Column(
+                                  Text(
+                                    key != 'overdue'
+                                        ? _dateFormatter(DateTime.parse(key))
+                                        : '期限切れ',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: key != 'overdue'
+                                          ? Colors.black
+                                          : Colors.pink,
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  Row(
                                     crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                        CrossAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: <Widget>[
-                                      Text(
-                                        task.text,
+                                      Icon(
+                                        Icons.timer,
+                                        size: 18,
                                       ),
                                       Padding(
-                                          padding:
-                                              EdgeInsets.only(bottom: 8.0)),
-                                      Row(
-                                        children: <Widget>[
-                                          Container(
-                                            padding: EdgeInsets.symmetric(
-                                              vertical: 4.0,
-                                              horizontal: 8.0,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              border: Border.all(
-                                                color: Colors.grey[300],
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(8.0),
-                                            ),
-                                            child: Row(
-                                              children: <Widget>[
-                                                Icon(
-                                                  Icons.calendar_today,
-                                                  color: Colors.green,
-                                                  size: 16.0,
-                                                ),
-                                                Padding(
-                                                    padding: EdgeInsets.only(
-                                                        right: 8.0)),
-                                                Text(
-                                                  _dateFormatter(DateTime.parse(
-                                                      task.dueDate)),
-                                                  style: TextStyle(
-                                                    color: Colors.green,
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          Padding(
-                                              padding:
-                                                  EdgeInsets.only(right: 8.0)),
-                                          Container(
-                                            padding: EdgeInsets.symmetric(
-                                              vertical: 4.0,
-                                              horizontal: 8.0,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              border: Border.all(
-                                                color: Colors.grey[300],
-                                              ),
-                                              borderRadius:
-                                                  BorderRadius.circular(8.0),
-                                            ),
-                                            child: Row(
-                                              children: <Widget>[
-                                                Icon(
-                                                  Icons.timer,
-                                                  size: 16.0,
-                                                ),
-                                                Padding(
-                                                    padding: EdgeInsets.only(
-                                                        right: 8.0)),
-                                                Text(
-                                                  (task.estimatedMinutes ?? 0) >
-                                                          0
-                                                      ? task.estimatedMinutes
-                                                              .round()
-                                                              .toString() +
-                                                          '分'
-                                                      : '時間なし',
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
+                                        padding: EdgeInsets.only(right: 4.0),
                                       ),
+                                      Text(
+                                          '${etSum.toString()}分 (${tasks.length}個)'),
                                     ],
                                   ),
-                                ),
+                                  Padding(
+                                    padding: EdgeInsets.only(right: 4.0),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                      );
-                    }).toList(),
-                  ),
-                ],
+                        ListView(
+                          padding: EdgeInsets.zero,
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          children: tasks.map((Task task) {
+                            return Card(
+                              key: Key(task.uuid),
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(8.0)),
+                              ),
+                              child: InkWell(
+                                onTap: () => _openUpdateFormModal(task),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Padding(
+                                      padding: EdgeInsets.only(top: 0.0),
+                                      child: IconButton(
+                                        icon: Icon(
+                                          task.completedAt == null
+                                              ? Icons.check_box_outline_blank
+                                              : Icons.check_box_outlined,
+                                          color: Colors.grey[600],
+                                        ),
+                                        onPressed: () => _handleCompleted(task),
+                                        enableFeedback: false,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Padding(
+                                        padding: EdgeInsets.only(
+                                            top: 10.0,
+                                            right: 12.0,
+                                            bottom: 10.0),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: <Widget>[
+                                            Text(
+                                              task.text,
+                                            ),
+                                            Padding(
+                                                padding: EdgeInsets.only(
+                                                    bottom: 8.0)),
+                                            Row(
+                                              children: <Widget>[
+                                                Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                    vertical: 4.0,
+                                                    horizontal: 8.0,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(
+                                                      color: Colors.grey[300],
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8.0),
+                                                  ),
+                                                  child: Row(
+                                                    children: <Widget>[
+                                                      Icon(
+                                                        Icons.calendar_today,
+                                                        color: Colors.green,
+                                                        size: 16.0,
+                                                      ),
+                                                      Padding(
+                                                          padding:
+                                                              EdgeInsets.only(
+                                                                  right: 8.0)),
+                                                      Text(
+                                                        _dateFormatter(
+                                                            DateTime.parse(
+                                                                task.dueDate)),
+                                                        style: TextStyle(
+                                                          color: Colors.green,
+                                                          fontSize: 13,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                Padding(
+                                                    padding: EdgeInsets.only(
+                                                        right: 8.0)),
+                                                Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                    vertical: 4.0,
+                                                    horizontal: 8.0,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(
+                                                      color: Colors.grey[300],
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8.0),
+                                                  ),
+                                                  child: Row(
+                                                    children: <Widget>[
+                                                      Icon(
+                                                        Icons.timer,
+                                                        size: 16.0,
+                                                      ),
+                                                      Padding(
+                                                          padding:
+                                                              EdgeInsets.only(
+                                                                  right: 8.0)),
+                                                      Text(
+                                                        (task.estimatedMinutes ??
+                                                                    0) >
+                                                                0
+                                                            ? task.estimatedMinutes
+                                                                    .round()
+                                                                    .toString() +
+                                                                '分'
+                                                            : '時間なし',
+                                                        style: TextStyle(
+                                                          fontSize: 13,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
               ),
-            );
-          }).toList(),
-        ),
-      ),
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openCreateFormModal(),
         tooltip: 'タスクを追加',
@@ -778,7 +848,6 @@ class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
     await widget.taskService.delete(uuid);
     widget.focusNode.requestFocus();
     widget.loadTasks();
-    Navigator.pop(context);
-    Navigator.pop(context);
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 }
