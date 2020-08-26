@@ -42,13 +42,7 @@ class TaskPage extends StatefulWidget {
 
 class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
   Map<String, List<Task>> _mapTasks = {};
-
-  final _textController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  bool _isComposing = false;
-  DateTime _dueDate = new DateTime.now();
-  double _estimatedMinutes = 0.0;
-
   TaskService _taskService = TaskService(new TaskRepository());
 
   void _loadTasks() async {
@@ -57,49 +51,6 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
     setState(() {
       _mapTasks = _map;
     });
-  }
-
-  Future<Null> _selectDueDate(BuildContext context) async {
-    final DateTime picked = await showDatePicker(
-        context: context,
-        locale: const Locale("ja"),
-        initialDate: _dueDate,
-        firstDate: new DateTime(2016),
-        lastDate: new DateTime.now().add(new Duration(days: 360)));
-    if (picked != null) setState(() => _dueDate = picked);
-  }
-
-  void openDialog(BuildContext context, setState) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(builder: (BuildContext context, setState) {
-          return SimpleDialog(
-            title: Text(
-              'タスクの完了にかかる時間',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16),
-            ),
-            children: <Widget>[
-              Slider(
-                value: _estimatedMinutes,
-                label: _estimatedMinutes > 0
-                    ? _estimatedMinutes.round().toString() + '分'
-                    : '時間なし',
-                min: 0,
-                max: 360,
-                divisions: 24,
-                onChanged: (double value) {
-                  setState(() {
-                    _estimatedMinutes = value;
-                  });
-                },
-              )
-            ],
-          );
-        });
-      },
-    );
   }
 
   String _dateFormatter(DateTime date) {
@@ -348,99 +299,10 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
       ),
       builder: (BuildContext context) {
         return StatefulBuilder(builder: (BuildContext context, setState) {
-          return SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Container(
-                padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom),
-                child: Column(
-                  children: <Widget>[
-                    TextField(
-                      controller: _textController,
-                      onChanged: (String text) {
-                        setState(() {
-                          _isComposing = text.length > 0;
-                        });
-                      },
-                      onSubmitted: _isComposing
-                          ? (String text) => _handleCreateSubmitted(text,
-                              _dueDate, _estimatedMinutes.round(), context)
-                          : null,
-                      autofocus: true,
-                      decoration: InputDecoration.collapsed(hintText: 'タスクを追加'),
-                      focusNode: _focusNode,
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 8.0),
-                    ),
-                    Row(
-                      children: <Widget>[
-                        Container(
-                          child: OutlineButton.icon(
-                            icon: Icon(
-                              Icons.calendar_today,
-                              color: Colors.green,
-                              size: 16.0,
-                            ),
-                            label: Text(
-                              _dateFormatter(_dueDate),
-                              style: TextStyle(
-                                color: Colors.green,
-                                fontSize: 14,
-                              ),
-                            ),
-                            onPressed: () => _selectDueDate(context),
-                            color: Colors.green,
-                            shape: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(8.0)),
-                            ),
-                          ),
-                        ),
-                        Padding(padding: EdgeInsets.only(right: 8.0)),
-                        Container(
-                          child: OutlineButton.icon(
-                            icon: Icon(
-                              Icons.timer,
-                              size: 16.0,
-                            ),
-                            label: Text(
-                              _estimatedMinutes > 0
-                                  ? _estimatedMinutes.round().toString() + '分'
-                                  : '時間なし',
-                              style: TextStyle(
-                                fontSize: 14,
-                              ),
-                            ),
-                            onPressed: () => openDialog(context, setState),
-                            color: Colors.green,
-                            shape: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(8.0)),
-                            ),
-                          ),
-                        ),
-                        Spacer(),
-                        Container(
-                          child: IconButton(
-                            icon: const Icon(Icons.send),
-                            color: Colors.blue,
-                            onPressed: _isComposing
-                                ? () => _handleCreateSubmitted(
-                                    _textController.text,
-                                    _dueDate,
-                                    _estimatedMinutes.round(),
-                                    context)
-                                : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          return TaskCreateFormWidget(
+            loadTasks: _loadTasks,
+            focusNode: _focusNode,
+            taskService: _taskService,
           );
         });
       },
@@ -456,154 +318,467 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
       ),
       builder: (BuildContext context) {
         return StatefulBuilder(builder: (BuildContext context, setState) {
-          return SingleChildScrollView(
-            child: Padding(
-              padding: EdgeInsets.only(
-                  top: 8.0, right: 16.0, bottom: 16.0, left: 16.0),
-              child: Container(
-                padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom),
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                      child: Align(
-                        alignment: Alignment.topLeft,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: <Widget>[
-                            Text(
-                              'タスクを編集',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Spacer(),
-                            OutlineButton(
-                              child: Text(
-                                '削除',
-                                style: TextStyle(
-                                  color: Colors.pink,
-                                ),
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(8.0)),
-                              ),
-                              onPressed: () {},
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Divider(),
-                    TextField(
-                      controller: _textController,
-                      onChanged: (String text) {
-                        setState(() {
-                          _isComposing = text.length > 0;
-                        });
-                      },
-                      onSubmitted: _isComposing
-                          ? (String text) => _handleCreateSubmitted(text,
-                              _dueDate, _estimatedMinutes.round(), context)
-                          : null,
-                      autofocus: true,
-                      decoration: InputDecoration.collapsed(hintText: 'タスクを追加'),
-                      focusNode: _focusNode,
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 8.0),
-                    ),
-                    Row(
-                      children: <Widget>[
-                        Container(
-                          child: OutlineButton.icon(
-                            icon: Icon(
-                              Icons.calendar_today,
-                              color: Colors.green,
-                              size: 16.0,
-                            ),
-                            label: Text(
-                              _dateFormatter(_dueDate),
-                              style: TextStyle(
-                                color: Colors.green,
-                                fontSize: 14,
-                              ),
-                            ),
-                            onPressed: () => _selectDueDate(context),
-                            color: Colors.green,
-                            shape: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(8.0)),
-                            ),
-                          ),
-                        ),
-                        Padding(padding: EdgeInsets.only(right: 8.0)),
-                        Container(
-                          child: OutlineButton.icon(
-                            icon: Icon(
-                              Icons.timer,
-                              size: 16.0,
-                            ),
-                            label: Text(
-                              _estimatedMinutes > 0
-                                  ? _estimatedMinutes.round().toString() + '分'
-                                  : '時間なし',
-                              style: TextStyle(
-                                fontSize: 14,
-                              ),
-                            ),
-                            onPressed: () => openDialog(context, setState),
-                            color: Colors.green,
-                            shape: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(8.0)),
-                            ),
-                          ),
-                        ),
-                        Spacer(),
-                        Container(
-                          child: IconButton(
-                            icon: const Icon(Icons.send),
-                            color: Colors.blue,
-                            onPressed: _isComposing
-                                ? () => _handleCreateSubmitted(
-                                    _textController.text,
-                                    _dueDate,
-                                    _estimatedMinutes.round(),
-                                    context)
-                                : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          return TaskUpdateFormWidget(
+            task: task,
+            loadTasks: _loadTasks,
+            focusNode: _focusNode,
+            taskService: _taskService,
           );
         });
       },
     );
   }
 
-  void _handleCreateSubmitted(String text, DateTime dueDate,
-      int estimatedMiutes, BuildContext context) async {
-    await _taskService.create(text, dueDate, estimatedMiutes);
+  void _handleCompleted(Task task) async {
+    await _taskService.toggleComplete(task.uuid);
+    _loadTasks();
+  }
+}
+
+class TaskCreateFormWidget extends StatefulWidget {
+  final loadTasks;
+  final FocusNode focusNode;
+  final TaskService taskService;
+
+  TaskCreateFormWidget({this.loadTasks, this.focusNode, this.taskService});
+
+  @override
+  _TaskCreateFormWidgetState createState() => _TaskCreateFormWidgetState();
+}
+
+class _TaskCreateFormWidgetState extends State<TaskCreateFormWidget> {
+  TextEditingController _textController = TextEditingController();
+  bool _isComposing = false;
+  DateTime _dueDate = new DateTime.now();
+  double _estimatedMinutes = 0.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Container(
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: Column(
+            children: <Widget>[
+              TextField(
+                controller: _textController,
+                onChanged: (String text) {
+                  setState(() {
+                    _isComposing = text.length > 0;
+                  });
+                },
+                onSubmitted: _isComposing
+                    ? (String text) => _handleSubmitted(
+                        text, _dueDate, _estimatedMinutes.round(), context)
+                    : null,
+                autofocus: true,
+                decoration: InputDecoration.collapsed(hintText: 'タスクの内容を入力'),
+                focusNode: widget.focusNode,
+              ),
+              Padding(
+                padding: EdgeInsets.only(bottom: 8.0),
+              ),
+              Row(
+                children: <Widget>[
+                  Container(
+                    child: OutlineButton.icon(
+                      icon: Icon(
+                        Icons.calendar_today,
+                        color: Colors.green,
+                        size: 16.0,
+                      ),
+                      label: Text(
+                        _dateFormatter(_dueDate),
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontSize: 14,
+                        ),
+                      ),
+                      onPressed: () => _selectDueDate(context),
+                      color: Colors.green,
+                      shape: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                      ),
+                    ),
+                  ),
+                  Padding(padding: EdgeInsets.only(right: 8.0)),
+                  Container(
+                    child: OutlineButton.icon(
+                      icon: Icon(
+                        Icons.timer,
+                        size: 16.0,
+                      ),
+                      label: Text(
+                        _estimatedMinutes > 0
+                            ? _estimatedMinutes.round().toString() + '分'
+                            : '時間なし',
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),
+                      ),
+                      onPressed: () => _openTimeSliderDialog(context, setState),
+                      color: Colors.green,
+                      shape: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                      ),
+                    ),
+                  ),
+                  Spacer(),
+                  Container(
+                    child: IconButton(
+                      icon: const Icon(Icons.send),
+                      color: Colors.blue,
+                      onPressed: _isComposing
+                          ? () => _handleSubmitted(_textController.text,
+                              _dueDate, _estimatedMinutes.round(), context)
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _handleSubmitted(String text, DateTime dueDate, int estimatedMiutes,
+      BuildContext context) async {
+    await widget.taskService.create(text, dueDate, estimatedMiutes);
     _textController.clear();
     setState(() {
       _isComposing = false;
       _dueDate = new DateTime.now();
       _estimatedMinutes = 0.0;
     });
-    _focusNode.requestFocus();
-    _loadTasks();
+    widget.focusNode.requestFocus();
+    widget.loadTasks();
     Navigator.pop(context);
   }
 
-  void _handleCompleted(Task task) async {
-    await _taskService.toggleComplete(task.uuid);
-    _loadTasks();
+  Future<Null> _selectDueDate(BuildContext context) async {
+    final DateTime picked = await showDatePicker(
+        context: context,
+        locale: const Locale("ja"),
+        initialDate: _dueDate,
+        firstDate: new DateTime(2016),
+        lastDate: new DateTime.now().add(new Duration(days: 360)));
+    if (picked != null) setState(() => _dueDate = picked);
+  }
+
+  void _openTimeSliderDialog(BuildContext context, setState) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (BuildContext context, setState) {
+          return SimpleDialog(
+            title: Text(
+              'タスクの完了にかかる時間',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16),
+            ),
+            children: <Widget>[
+              Slider(
+                value: _estimatedMinutes,
+                label: _estimatedMinutes > 0
+                    ? _estimatedMinutes.round().toString() + '分'
+                    : '時間なし',
+                min: 0,
+                max: 360,
+                divisions: 24,
+                onChanged: (double value) {
+                  setState(() {
+                    _estimatedMinutes = value;
+                  });
+                },
+              )
+            ],
+          );
+        });
+      },
+    );
+  }
+
+  String _dateFormatter(DateTime date) {
+    DateTime today = new DateTime.now();
+    Map<int, String> conv = {-1: '昨日', 0: '今日', 1: '明日', 2: '明後日'};
+    for (int key in conv.keys) {
+      DateTime cdate = today.add(new Duration(days: key));
+      if (date.year == cdate.year &&
+          date.month == cdate.month &&
+          date.day == cdate.day) return conv[key];
+    }
+    if (today.year == date.year) return DateFormat('M月d日').format(date);
+    return DateFormat('yyyy年M月d日').format(date);
+  }
+}
+
+class TaskUpdateFormWidget extends StatefulWidget {
+  final Task task;
+  final loadTasks;
+  final FocusNode focusNode;
+  final TaskService taskService;
+
+  TaskUpdateFormWidget(
+      {this.task, this.loadTasks, this.focusNode, this.taskService});
+
+  @override
+  _TaskUpdateFormWidgetState createState() =>
+      _TaskUpdateFormWidgetState(task: task);
+}
+
+class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
+  Task task;
+  TextEditingController _textController;
+  bool _isComposing;
+  DateTime _dueDate;
+  double _estimatedMinutes;
+
+  _TaskUpdateFormWidgetState({this.task}) {
+    _loadSingleTask();
+    _textController = TextEditingController(text: task.text);
+    _isComposing = task.text.length > 0;
+    _dueDate = DateTime.parse(task.dueDate);
+    _estimatedMinutes = task.estimatedMinutes.toDouble();
+  }
+
+  void _loadSingleTask() async {
+    task = await widget.taskService.getTaskByUuid(task.uuid);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding:
+            EdgeInsets.only(top: 8.0, right: 16.0, bottom: 16.0, left: 16.0),
+        child: Container(
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+          child: Column(
+            children: <Widget>[
+              Container(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      'タスクを編集',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Spacer(),
+                    OutlineButton(
+                      child: Text(
+                        '削除',
+                        style: TextStyle(
+                          color: Colors.pink,
+                        ),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                      ),
+                      onPressed: () => _openDeleteAlertDialog(),
+                    ),
+                  ],
+                ),
+              ),
+              Divider(),
+              TextField(
+                controller: _textController,
+                onChanged: (String text) {
+                  setState(() {
+                    _isComposing = text.length > 0;
+                  });
+                },
+                onSubmitted: _isComposing
+                    ? (String text) => _handleSubmitted(
+                          task.uuid,
+                          text,
+                          _dueDate,
+                          _estimatedMinutes.round(),
+                          context,
+                        )
+                    : null,
+                autofocus: true,
+                decoration: InputDecoration.collapsed(hintText: 'タスクの内容を入力'),
+                focusNode: widget.focusNode,
+              ),
+              Padding(
+                padding: EdgeInsets.only(bottom: 8.0),
+              ),
+              Row(
+                children: <Widget>[
+                  Container(
+                    child: OutlineButton.icon(
+                      icon: Icon(
+                        Icons.calendar_today,
+                        color: Colors.green,
+                        size: 16.0,
+                      ),
+                      label: Text(
+                        _dateFormatter(_dueDate),
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontSize: 14,
+                        ),
+                      ),
+                      onPressed: () => _selectDueDate(context),
+                      color: Colors.green,
+                      shape: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                      ),
+                    ),
+                  ),
+                  Padding(padding: EdgeInsets.only(right: 8.0)),
+                  Container(
+                    child: OutlineButton.icon(
+                      icon: Icon(
+                        Icons.timer,
+                        size: 16.0,
+                      ),
+                      label: Text(
+                        _estimatedMinutes > 0
+                            ? _estimatedMinutes.round().toString() + '分'
+                            : '時間なし',
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),
+                      ),
+                      onPressed: () => _openTimeSliderDialog(context, setState),
+                      color: Colors.green,
+                      shape: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                      ),
+                    ),
+                  ),
+                  Spacer(),
+                  Container(
+                    child: IconButton(
+                      icon: const Icon(Icons.send),
+                      color: Colors.blue,
+                      onPressed: _isComposing
+                          ? () => _handleSubmitted(
+                                task.uuid,
+                                _textController.text,
+                                _dueDate,
+                                _estimatedMinutes.round(),
+                                context,
+                              )
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<Null> _selectDueDate(BuildContext context) async {
+    final DateTime picked = await showDatePicker(
+        context: context,
+        locale: const Locale("ja"),
+        initialDate: _dueDate,
+        firstDate: new DateTime(2016),
+        lastDate: new DateTime.now().add(new Duration(days: 360)));
+    if (picked != null) setState(() => _dueDate = picked);
+  }
+
+  void _openTimeSliderDialog(BuildContext context, setState) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (BuildContext context, setState) {
+          return SimpleDialog(
+            title: Text(
+              'タスクの完了にかかる時間',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16),
+            ),
+            children: <Widget>[
+              Slider(
+                value: _estimatedMinutes,
+                label: _estimatedMinutes > 0
+                    ? _estimatedMinutes.round().toString() + '分'
+                    : '時間なし',
+                min: 0,
+                max: 360,
+                divisions: 24,
+                onChanged: (double value) {
+                  setState(() {
+                    _estimatedMinutes = value;
+                  });
+                },
+              )
+            ],
+          );
+        });
+      },
+    );
+  }
+
+  String _dateFormatter(DateTime date) {
+    DateTime today = new DateTime.now();
+    Map<int, String> conv = {-1: '昨日', 0: '今日', 1: '明日', 2: '明後日'};
+    for (int key in conv.keys) {
+      DateTime cdate = today.add(new Duration(days: key));
+      if (date.year == cdate.year &&
+          date.month == cdate.month &&
+          date.day == cdate.day) return conv[key];
+    }
+    if (today.year == date.year) return DateFormat('M月d日').format(date);
+    return DateFormat('yyyy年M月d日').format(date);
+  }
+
+  void _handleSubmitted(String uuid, String text, DateTime dueDate,
+      int estimatedMiutes, BuildContext context) async {
+    await widget.taskService.update(uuid, text, dueDate, estimatedMiutes);
+    widget.focusNode.requestFocus();
+    widget.loadTasks();
+    Navigator.pop(context);
+  }
+
+  void _openDeleteAlertDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('"${task.text}"を削除しますか？'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('いいえ'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            FlatButton(
+              child: Text('はい'),
+              onPressed: () => _handleDeleted(task.uuid),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _handleDeleted(String uuid) async {
+    await widget.taskService.delete(uuid);
+    widget.focusNode.requestFocus();
+    widget.loadTasks();
+    Navigator.pop(context);
+    Navigator.pop(context);
   }
 }
