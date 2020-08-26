@@ -130,6 +130,7 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
         ),
       ),
       body: Container(
+        padding: EdgeInsets.all(4.0),
         child: ListView(
           padding: EdgeInsets.only(bottom: 80.0),
           children: _mapTasks.entries.map((e) {
@@ -202,128 +203,124 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
                     children: tasks.map((Task task) {
                       return Card(
                         key: Key(task.uuid),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Padding(
-                              padding: EdgeInsets.only(top: 0.0),
-                              child: IconButton(
-                                icon: Icon(
-                                  task.completedAt == null
-                                      ? Icons.radio_button_unchecked
-                                      : Icons.check_box,
-                                  color: Colors.grey[600],
-                                ),
-                                onPressed: () => _handleCompleted(task),
-                                enableFeedback: false,
-                              ),
-                            ),
-                            Expanded(
-                              child: Padding(
-                                padding: EdgeInsets.only(
-                                    top: 10.0, right: 12.0, bottom: 10.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Text(
-                                      task.text,
-                                    ),
-                                    Padding(
-                                        padding: EdgeInsets.only(bottom: 8.0)),
-                                    Row(
-                                      children: <Widget>[
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                              vertical: 4.0, horizontal: 12.0),
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: Colors.grey[300],
-                                            ),
-                                            borderRadius:
-                                                BorderRadius.circular(8.0),
-                                          ),
-                                          child: Row(
-                                            children: <Widget>[
-                                              Icon(
-                                                Icons.calendar_today,
-                                                color: Colors.green,
-                                                size: 16.0,
-                                              ),
-                                              Padding(
-                                                  padding: EdgeInsets.only(
-                                                      right: 8.0)),
-                                              Text(
-                                                _dateFormatter(DateTime.parse(
-                                                    task.dueDate)),
-                                                style: TextStyle(
-                                                  color: Colors.green,
-                                                  fontSize: 13,
-                                                  letterSpacing: -0.8,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        Padding(
-                                            padding:
-                                                EdgeInsets.only(right: 8.0)),
-                                        Container(
-                                          padding: EdgeInsets.symmetric(
-                                              vertical: 4.0, horizontal: 12.0),
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: Colors.grey[300],
-                                            ),
-                                            borderRadius:
-                                                BorderRadius.circular(8.0),
-                                          ),
-                                          child: Row(
-                                            children: <Widget>[
-                                              Icon(
-                                                Icons.timer,
-                                                size: 16.0,
-                                              ),
-                                              Padding(
-                                                  padding: EdgeInsets.only(
-                                                      right: 8.0)),
-                                              Text(
-                                                (task.estimatedMinutes ?? 0) > 0
-                                                    ? task.estimatedMinutes
-                                                            .round()
-                                                            .toString() +
-                                                        '分'
-                                                    : '時間なし',
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  letterSpacing: -0.8,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(top: 0.0),
-                              child: IconButton(
-                                icon: Icon(
-                                  Icons.more_vert,
-                                  color: Colors.grey[600],
-                                ),
-                                onPressed: () => print('Press!'),
-                                enableFeedback: false,
-                              ),
-                            ),
-                            // タップでEタスクのdit画面へ
-                          ],
-                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                        ),
+                        child: InkWell(
+                          onTap: () => _openUpdateFormModal(task),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Padding(
+                                padding: EdgeInsets.only(top: 0.0),
+                                child: IconButton(
+                                  icon: Icon(
+                                    task.completedAt == null
+                                        ? Icons.radio_button_unchecked
+                                        : Icons.check_box,
+                                    color: Colors.grey[600],
+                                  ),
+                                  onPressed: () => _handleCompleted(task),
+                                  enableFeedback: false,
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                      top: 10.0, right: 12.0, bottom: 10.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(
+                                        task.text,
+                                      ),
+                                      Padding(
+                                          padding:
+                                              EdgeInsets.only(bottom: 8.0)),
+                                      Row(
+                                        children: <Widget>[
+                                          Container(
+                                            padding: EdgeInsets.symmetric(
+                                              vertical: 4.0,
+                                              horizontal: 8.0,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Colors.grey[300],
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(8.0),
+                                            ),
+                                            child: Row(
+                                              children: <Widget>[
+                                                Icon(
+                                                  Icons.calendar_today,
+                                                  color: Colors.green,
+                                                  size: 16.0,
+                                                ),
+                                                Padding(
+                                                    padding: EdgeInsets.only(
+                                                        right: 8.0)),
+                                                Text(
+                                                  _dateFormatter(DateTime.parse(
+                                                      task.dueDate)),
+                                                  style: TextStyle(
+                                                    color: Colors.green,
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Padding(
+                                              padding:
+                                                  EdgeInsets.only(right: 8.0)),
+                                          Container(
+                                            padding: EdgeInsets.symmetric(
+                                              vertical: 4.0,
+                                              horizontal: 8.0,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                color: Colors.grey[300],
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(8.0),
+                                            ),
+                                            child: Row(
+                                              children: <Widget>[
+                                                Icon(
+                                                  Icons.timer,
+                                                  size: 16.0,
+                                                ),
+                                                Padding(
+                                                    padding: EdgeInsets.only(
+                                                        right: 8.0)),
+                                                Text(
+                                                  (task.estimatedMinutes ?? 0) >
+                                                          0
+                                                      ? task.estimatedMinutes
+                                                              .round()
+                                                              .toString() +
+                                                          '分'
+                                                      : '時間なし',
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     }).toList(),
@@ -335,129 +332,264 @@ class _TaskPageState extends State<TaskPage> with TickerProviderStateMixin {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showModalBottomSheet(
-            isScrollControlled: true,
-            context: context,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(8.0)),
-            ),
-            builder: (BuildContext context) {
-              return StatefulBuilder(builder: (BuildContext context, setState) {
-                return SingleChildScrollView(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Container(
-                      padding: EdgeInsets.only(
-                          bottom: MediaQuery.of(context).viewInsets.bottom),
-                      child: Column(
-                        children: <Widget>[
-                          TextField(
-                            controller: _textController,
-                            onChanged: (String text) {
-                              setState(() {
-                                _isComposing = text.length > 0;
-                              });
-                            },
-                            onSubmitted: _isComposing
-                                ? (String text) => _handleSubmitted(
-                                    text,
-                                    _dueDate,
-                                    _estimatedMinutes.round(),
-                                    context)
-                                : null,
-                            autofocus: true,
-                            decoration:
-                                InputDecoration.collapsed(hintText: 'タスクを追加'),
-                            focusNode: _focusNode,
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 8.0),
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Container(
-                                child: OutlineButton.icon(
-                                  icon: Icon(
-                                    Icons.calendar_today,
-                                    color: Colors.green,
-                                    size: 16.0,
-                                  ),
-                                  label: Text(
-                                    _dateFormatter(_dueDate),
-                                    style: TextStyle(
-                                      color: Colors.green,
-                                      fontSize: 14,
-                                      letterSpacing: -0.8,
-                                    ),
-                                  ),
-                                  onPressed: () => _selectDueDate(context),
-                                  color: Colors.green,
-                                  shape: OutlineInputBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(8.0)),
-                                  ),
-                                ),
-                              ),
-                              Padding(padding: EdgeInsets.only(right: 8.0)),
-                              Container(
-                                child: OutlineButton.icon(
-                                  icon: Icon(
-                                    Icons.timer,
-                                    size: 16.0,
-                                  ),
-                                  label: Text(
-                                    _estimatedMinutes > 0
-                                        ? _estimatedMinutes.round().toString() +
-                                            '分'
-                                        : '時間なし',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      letterSpacing: -0.8,
-                                    ),
-                                  ),
-                                  onPressed: () =>
-                                      openDialog(context, setState),
-                                  color: Colors.green,
-                                  shape: OutlineInputBorder(
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(8.0)),
-                                  ),
-                                ),
-                              ),
-                              Spacer(),
-                              Container(
-                                child: IconButton(
-                                  icon: const Icon(Icons.send),
-                                  color: Colors.blue,
-                                  onPressed: _isComposing
-                                      ? () => _handleSubmitted(
-                                          _textController.text,
-                                          _dueDate,
-                                          _estimatedMinutes.round(),
-                                          context)
-                                      : null,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              });
-            },
-          );
-        },
+        onPressed: () => _openCreateFormModal(),
         tooltip: 'タスクを追加',
         child: Icon(Icons.add),
       ),
     );
   }
 
-  void _handleSubmitted(String text, DateTime dueDate, int estimatedMiutes,
-      BuildContext context) async {
+  void _openCreateFormModal() {
+    showModalBottomSheet(
+      isScrollControlled: true,
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(8.0)),
+      ),
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (BuildContext context, setState) {
+          return SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Container(
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom),
+                child: Column(
+                  children: <Widget>[
+                    TextField(
+                      controller: _textController,
+                      onChanged: (String text) {
+                        setState(() {
+                          _isComposing = text.length > 0;
+                        });
+                      },
+                      onSubmitted: _isComposing
+                          ? (String text) => _handleCreateSubmitted(text,
+                              _dueDate, _estimatedMinutes.round(), context)
+                          : null,
+                      autofocus: true,
+                      decoration: InputDecoration.collapsed(hintText: 'タスクを追加'),
+                      focusNode: _focusNode,
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 8.0),
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Container(
+                          child: OutlineButton.icon(
+                            icon: Icon(
+                              Icons.calendar_today,
+                              color: Colors.green,
+                              size: 16.0,
+                            ),
+                            label: Text(
+                              _dateFormatter(_dueDate),
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontSize: 14,
+                              ),
+                            ),
+                            onPressed: () => _selectDueDate(context),
+                            color: Colors.green,
+                            shape: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8.0)),
+                            ),
+                          ),
+                        ),
+                        Padding(padding: EdgeInsets.only(right: 8.0)),
+                        Container(
+                          child: OutlineButton.icon(
+                            icon: Icon(
+                              Icons.timer,
+                              size: 16.0,
+                            ),
+                            label: Text(
+                              _estimatedMinutes > 0
+                                  ? _estimatedMinutes.round().toString() + '分'
+                                  : '時間なし',
+                              style: TextStyle(
+                                fontSize: 14,
+                              ),
+                            ),
+                            onPressed: () => openDialog(context, setState),
+                            color: Colors.green,
+                            shape: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8.0)),
+                            ),
+                          ),
+                        ),
+                        Spacer(),
+                        Container(
+                          child: IconButton(
+                            icon: const Icon(Icons.send),
+                            color: Colors.blue,
+                            onPressed: _isComposing
+                                ? () => _handleCreateSubmitted(
+                                    _textController.text,
+                                    _dueDate,
+                                    _estimatedMinutes.round(),
+                                    context)
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
+      },
+    );
+  }
+
+  void _openUpdateFormModal(Task task) {
+    showModalBottomSheet(
+      isScrollControlled: true,
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(8.0)),
+      ),
+      builder: (BuildContext context) {
+        return StatefulBuilder(builder: (BuildContext context, setState) {
+          return SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.only(
+                  top: 8.0, right: 16.0, bottom: 16.0, left: 16.0),
+              child: Container(
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom),
+                child: Column(
+                  children: <Widget>[
+                    Container(
+                      child: Align(
+                        alignment: Alignment.topLeft,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: <Widget>[
+                            Text(
+                              'タスクを編集',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Spacer(),
+                            OutlineButton(
+                              child: Text(
+                                '削除',
+                                style: TextStyle(
+                                  color: Colors.pink,
+                                ),
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(8.0)),
+                              ),
+                              onPressed: () {},
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Divider(),
+                    TextField(
+                      controller: _textController,
+                      onChanged: (String text) {
+                        setState(() {
+                          _isComposing = text.length > 0;
+                        });
+                      },
+                      onSubmitted: _isComposing
+                          ? (String text) => _handleCreateSubmitted(text,
+                              _dueDate, _estimatedMinutes.round(), context)
+                          : null,
+                      autofocus: true,
+                      decoration: InputDecoration.collapsed(hintText: 'タスクを追加'),
+                      focusNode: _focusNode,
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 8.0),
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Container(
+                          child: OutlineButton.icon(
+                            icon: Icon(
+                              Icons.calendar_today,
+                              color: Colors.green,
+                              size: 16.0,
+                            ),
+                            label: Text(
+                              _dateFormatter(_dueDate),
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontSize: 14,
+                              ),
+                            ),
+                            onPressed: () => _selectDueDate(context),
+                            color: Colors.green,
+                            shape: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8.0)),
+                            ),
+                          ),
+                        ),
+                        Padding(padding: EdgeInsets.only(right: 8.0)),
+                        Container(
+                          child: OutlineButton.icon(
+                            icon: Icon(
+                              Icons.timer,
+                              size: 16.0,
+                            ),
+                            label: Text(
+                              _estimatedMinutes > 0
+                                  ? _estimatedMinutes.round().toString() + '分'
+                                  : '時間なし',
+                              style: TextStyle(
+                                fontSize: 14,
+                              ),
+                            ),
+                            onPressed: () => openDialog(context, setState),
+                            color: Colors.green,
+                            shape: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(8.0)),
+                            ),
+                          ),
+                        ),
+                        Spacer(),
+                        Container(
+                          child: IconButton(
+                            icon: const Icon(Icons.send),
+                            color: Colors.blue,
+                            onPressed: _isComposing
+                                ? () => _handleCreateSubmitted(
+                                    _textController.text,
+                                    _dueDate,
+                                    _estimatedMinutes.round(),
+                                    context)
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
+      },
+    );
+  }
+
+  void _handleCreateSubmitted(String text, DateTime dueDate,
+      int estimatedMiutes, BuildContext context) async {
     await _taskService.create(text, dueDate, estimatedMiutes);
     _textController.clear();
     setState(() {
