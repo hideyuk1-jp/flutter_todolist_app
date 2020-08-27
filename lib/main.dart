@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:gradient_app_bar/gradient_app_bar.dart';
 
+import 'package:flutter_todolist_app/Repositories/TaskRepository.dart';
+import 'package:flutter_todolist_app/Services/TaskService.dart';
 import 'package:flutter_todolist_app/TaskPage.dart';
 import 'package:flutter_todolist_app/CompletedTaskPage.dart';
+import 'package:flutter_todolist_app/Models/Task.dart';
 
 void main() {
   runApp(MyApp());
@@ -35,17 +38,27 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  Map<String, List<Task>> _tasksMap = {};
+  Map<String, List<Task>> _completedTasksMap = {};
+  TaskService _taskService = TaskService(new TaskRepository());
   int _selectedIndex = 0;
   PageController _pageController;
 
-  final List<Widget> _pageWidgets = [
-    TaskPage(),
-    CompletedTaskPage(),
-  ];
+  void _loadTasks() async {
+    Map<String, List<Task>> _tasksMapTmp =
+        await _taskService.getIncompletedTasksGroupedByDueDate();
+    Map<String, List<Task>> _completedTasksMapTmp =
+        await _taskService.getCompletedTasksGroupedByCompleteDate();
+    setState(() {
+      _tasksMap = _tasksMapTmp;
+      _completedTasksMap = _completedTasksMapTmp;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
+    _loadTasks();
     _pageController = PageController(
       initialPage: _selectedIndex,
     );
@@ -59,6 +72,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> _pageWidgets = [
+      TaskPage(tasksMap: _tasksMap, loadTasks: _loadTasks),
+      CompletedTaskPage(tasksMap: _completedTasksMap, loadTasks: _loadTasks),
+    ];
+
     return Scaffold(
       appBar: GradientAppBar(
         title: Center(

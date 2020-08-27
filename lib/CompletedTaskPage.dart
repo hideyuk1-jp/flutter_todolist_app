@@ -4,10 +4,15 @@ import 'package:intl/intl.dart';
 import 'package:flutter_todolist_app/Repositories/TaskRepository.dart';
 import 'package:flutter_todolist_app/Services/TaskService.dart';
 import 'package:flutter_todolist_app/Models/Task.dart';
-import 'package:flutter_todolist_app/TaskPage.dart';
 
 class CompletedTaskPage extends StatefulWidget {
-  CompletedTaskPage({Key key}) : super(key: key);
+  final Map<String, List<Task>> tasksMap;
+  final loadTasks;
+  CompletedTaskPage({
+    Key key,
+    this.tasksMap,
+    this.loadTasks,
+  }) : super(key: key);
 
   @override
   _CompletedTaskPageState createState() => _CompletedTaskPageState();
@@ -15,16 +20,16 @@ class CompletedTaskPage extends StatefulWidget {
 
 class _CompletedTaskPageState extends State<CompletedTaskPage>
     with AutomaticKeepAliveClientMixin {
-  Map<String, List<Task>> _mapTasks = {};
+  //Map<String, List<Task>> _mapTasks = {};
   TaskService _taskService = TaskService(new TaskRepository());
 
-  void _loadTasks() async {
+  /*void _loadTasks() async {
     Map<String, List<Task>> _map =
         await _taskService.getCompletedTasksGroupedByCompleteDate();
     setState(() {
       _mapTasks = _map;
     });
-  }
+  }*/
 
   String _dateFormatter(DateTime date) {
     DateTime today = new DateTime.now();
@@ -42,7 +47,7 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
   @override
   void initState() {
     super.initState();
-    _loadTasks();
+    widget.loadTasks();
   }
 
   @override
@@ -50,7 +55,7 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
 
   @override
   Widget build(BuildContext context) {
-    return _mapTasks.length == 0
+    return widget.tasksMap.length == 0
         ? Center(
             child: Container(
               child: Column(
@@ -78,7 +83,7 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
                 bottom: 80.0,
                 left: 4.0,
               ),
-              children: _mapTasks.entries.map((e) {
+              children: widget.tasksMap.entries.map((e) {
                 String key = e.key;
                 List<Task> tasks = e.value;
                 int etSum = tasks.fold(
@@ -289,6 +294,6 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
 
   void _handleCompleted(Task task) async {
     await _taskService.toggleComplete(task.uuid);
-    _loadTasks();
+    widget.loadTasks();
   }
 }

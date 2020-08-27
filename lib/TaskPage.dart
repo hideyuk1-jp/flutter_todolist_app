@@ -7,8 +7,12 @@ import 'package:flutter_todolist_app/Models/Task.dart';
 import 'package:flutter_todolist_app/CommonParts.dart';
 
 class TaskPage extends StatefulWidget {
+  final Map<String, List<Task>> tasksMap;
+  final loadTasks;
   TaskPage({
     Key key,
+    this.tasksMap,
+    this.loadTasks,
   }) : super(key: key);
 
   @override
@@ -17,17 +21,17 @@ class TaskPage extends StatefulWidget {
 
 class _TaskPageState extends State<TaskPage>
     with AutomaticKeepAliveClientMixin {
-  Map<String, List<Task>> _mapTasks = {};
+  //Map<String, List<Task>> _mapTasks = {};
   final FocusNode _focusNode = FocusNode();
   TaskService _taskService = TaskService(new TaskRepository());
 
-  void _loadTasks() async {
+  /*void _loadTasks() async {
     Map<String, List<Task>> _map =
         await _taskService.getIncompletedTasksGroupedByDueDate();
     setState(() {
       _mapTasks = _map;
     });
-  }
+  }*/
 
   String _dateFormatter(DateTime date) {
     DateTime today = new DateTime.now();
@@ -48,13 +52,13 @@ class _TaskPageState extends State<TaskPage>
   @override
   void initState() {
     super.initState();
-    _loadTasks();
+    widget.loadTasks();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _mapTasks.length == 0
+      body: widget.tasksMap.length == 0
           ? Center(
               child: Container(
                 child: Column(
@@ -82,7 +86,7 @@ class _TaskPageState extends State<TaskPage>
                   bottom: 80.0,
                   left: 4.0,
                 ),
-                children: _mapTasks.entries.map((e) {
+                children: widget.tasksMap.entries.map((e) {
                   String key = e.key;
                   List<Task> tasks = e.value;
                   int etSum = tasks.fold(
@@ -312,7 +316,7 @@ class _TaskPageState extends State<TaskPage>
       builder: (BuildContext context) {
         return StatefulBuilder(builder: (BuildContext context, setState) {
           return TaskCreateFormWidget(
-            loadTasks: _loadTasks,
+            loadTasks: widget.loadTasks,
             focusNode: _focusNode,
             taskService: _taskService,
           );
@@ -332,7 +336,7 @@ class _TaskPageState extends State<TaskPage>
         return StatefulBuilder(builder: (BuildContext context, setState) {
           return TaskUpdateFormWidget(
             task: task,
-            loadTasks: _loadTasks,
+            loadTasks: widget.loadTasks,
             focusNode: _focusNode,
             taskService: _taskService,
           );
@@ -343,7 +347,7 @@ class _TaskPageState extends State<TaskPage>
 
   void _handleCompleted(Task task) async {
     await _taskService.toggleComplete(task.uuid);
-    _loadTasks();
+    widget.loadTasks();
   }
 }
 
