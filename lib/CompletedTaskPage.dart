@@ -50,11 +50,16 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
     return RefreshIndicator(
       onRefresh: widget.loadTasks,
       child: widget.tasksMap.length == 0
-          ? Center(
-              child: ListView(
-                shrinkWrap: true,
-                children: [
-                  Container(
+          ? LayoutBuilder(builder: (context, constraints) {
+              return SingleChildScrollView(
+                // 中身の高さによらず常にバウンスさせる
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: ConstrainedBox(
+                  // 最小高さを親の高さと一緒にする
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -70,9 +75,9 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
                       ],
                     ),
                   ),
-                ],
-              ),
-            )
+                ),
+              );
+            })
           : ListView(
               padding: EdgeInsets.only(
                 top: 4.0,
