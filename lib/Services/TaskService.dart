@@ -25,8 +25,9 @@ class TaskService implements TaskServiceInterface {
   Future<List<Task>> getCompletedTasks() async {
     List<Task> tasks = await getTasks();
     tasks = tasks.where((task) => task.completedAt != null).toList();
+    // 完了した時間が新しい順にソート
     tasks
-        .sort((task1, task2) => task1.completedAt.compareTo(task2.completedAt));
+        .sort((task1, task2) => task2.completedAt.compareTo(task1.completedAt));
     return tasks;
   }
 
@@ -52,6 +53,20 @@ class TaskService implements TaskServiceInterface {
         tasksGroupedByDueDate[key] = [task];
     }
     return tasksGroupedByDueDate;
+  }
+
+  Future<Map<String, List<Task>>>
+      getCompletedTasksGroupedByCompleteDate() async {
+    List<Task> tasks = await getCompletedTasks();
+    Map<String, List<Task>> tasksGroupedByCompleteDate = {};
+    for (Task task in tasks) {
+      String key = DateFormat('yyyy-MM-dd').format(task.completedAt.toLocal());
+      if (tasksGroupedByCompleteDate.containsKey(key))
+        tasksGroupedByCompleteDate[key].add(task);
+      else
+        tasksGroupedByCompleteDate[key] = [task];
+    }
+    return tasksGroupedByCompleteDate;
   }
 
   Future create(String text, DateTime dueDate, int estimatedMinutes) async {

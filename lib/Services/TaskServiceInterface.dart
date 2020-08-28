@@ -6,6 +6,7 @@ abstract class TaskServiceInterface {
   Future<List<Task>> getCompletedTasks();
   Future<List<Task>> getIncompletedTasks();
   Future<Map<String, List<Task>>> getIncompletedTasksGroupedByDueDate();
+  Future<Map<String, List<Task>>> getCompletedTasksGroupedByCompleteDate();
   Future create(String text, DateTime dueDate, int estimatedMinutes);
   Future update(
       String uuid, String text, DateTime dueDate, int estimatedMinutes);
