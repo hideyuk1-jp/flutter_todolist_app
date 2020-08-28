@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:flutter_todolist_app/Repositories/TaskRepository.dart';
 import 'package:flutter_todolist_app/Services/TaskService.dart';
 import 'package:flutter_todolist_app/Models/Task.dart';
+import 'package:flutter_todolist_app/CommonParts.dart';
 
 class CompletedTaskPage extends StatefulWidget {
   final Map<String, List<Task>> tasksMap;
@@ -20,16 +21,7 @@ class CompletedTaskPage extends StatefulWidget {
 
 class _CompletedTaskPageState extends State<CompletedTaskPage>
     with AutomaticKeepAliveClientMixin {
-  //Map<String, List<Task>> _mapTasks = {};
   TaskService _taskService = TaskService(new TaskRepository());
-
-  /*void _loadTasks() async {
-    Map<String, List<Task>> _map =
-        await _taskService.getCompletedTasksGroupedByCompleteDate();
-    setState(() {
-      _mapTasks = _map;
-    });
-  }*/
 
   String _dateFormatter(DateTime date) {
     DateTime today = new DateTime.now();
@@ -55,28 +47,28 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
 
   @override
   Widget build(BuildContext context) {
-    return widget.tasksMap.length == 0
-        ? Center(
-            child: Container(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: <Widget>[
-                  Icon(
-                    Icons.eco,
-                    size: 48,
-                    color: Colors.green,
-                  ),
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 16.0),
-                  ),
-                  Text('完了したタスクはありません'),
-                ],
+    return RefreshIndicator(
+      onRefresh: widget.loadTasks,
+      child: widget.tasksMap.length == 0
+          ? Center(
+              child: Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    GradientIcon(
+                      Icons.work_off,
+                      size: 48,
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 16.0),
+                    ),
+                    Text('完了したタスクはありません'),
+                  ],
+                ),
               ),
-            ),
-          )
-        : Container(
-            child: ListView(
+            )
+          : ListView(
               padding: EdgeInsets.only(
                 top: 4.0,
                 right: 4.0,
@@ -102,12 +94,6 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: <Widget>[
-                                key == 'overdue'
-                                    ? Icon(
-                                        Icons.local_fire_department,
-                                        color: Colors.pink,
-                                      )
-                                    : Container(),
                                 Padding(
                                   padding: EdgeInsets.only(right: 4.0),
                                 ),
@@ -116,12 +102,10 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: key != 'overdue'
-                                        ? Theme.of(context)
-                                            .textTheme
-                                            .bodyText1
-                                            .color
-                                        : Colors.pink,
+                                    color: Theme.of(context)
+                                        .textTheme
+                                        .bodyText1
+                                        .color,
                                   ),
                                 ),
                                 Spacer(),
@@ -188,6 +172,9 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
                                         children: <Widget>[
                                           Text(
                                             task.text,
+                                            style: TextStyle(
+                                                decoration:
+                                                    TextDecoration.lineThrough),
                                           ),
                                           Padding(
                                               padding:
@@ -289,7 +276,7 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
                 );
               }).toList(),
             ),
-          );
+    );
   }
 
   void _handleCompleted(Task task) async {

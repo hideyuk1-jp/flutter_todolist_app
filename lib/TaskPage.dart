@@ -21,17 +21,8 @@ class TaskPage extends StatefulWidget {
 
 class _TaskPageState extends State<TaskPage>
     with AutomaticKeepAliveClientMixin {
-  //Map<String, List<Task>> _mapTasks = {};
   final FocusNode _focusNode = FocusNode();
   TaskService _taskService = TaskService(new TaskRepository());
-
-  /*void _loadTasks() async {
-    Map<String, List<Task>> _map =
-        await _taskService.getIncompletedTasksGroupedByDueDate();
-    setState(() {
-      _mapTasks = _map;
-    });
-  }*/
 
   String _dateFormatter(DateTime date) {
     DateTime today = new DateTime.now();
@@ -58,28 +49,28 @@ class _TaskPageState extends State<TaskPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: widget.tasksMap.length == 0
-          ? Center(
-              child: Container(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    Icon(
-                      Icons.wb_sunny,
-                      size: 48,
-                      color: Colors.orange,
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 16.0),
-                    ),
-                    Text('未完了のタスクはありません'),
-                  ],
+      body: RefreshIndicator(
+        onRefresh: widget.loadTasks,
+        child: widget.tasksMap.length == 0
+            ? Center(
+                child: Container(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      GradientIcon(
+                        Icons.wb_sunny,
+                        size: 48,
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(bottom: 16.0),
+                      ),
+                      Text('未完了のタスクはありません'),
+                    ],
+                  ),
                 ),
-              ),
-            )
-          : Container(
-              child: ListView(
+              )
+            : ListView(
                 padding: EdgeInsets.only(
                   top: 4.0,
                   right: 4.0,
@@ -297,11 +288,11 @@ class _TaskPageState extends State<TaskPage>
                   );
                 }).toList(),
               ),
-            ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openCreateFormModal(),
         tooltip: 'タスクを追加',
-        child: MyGradientIcon(iconData: Icons.add),
+        child: GradientCircleIconButton(icon: Icon(Icons.add)),
       ),
     );
   }
@@ -444,7 +435,9 @@ class _TaskCreateFormWidgetState extends State<TaskCreateFormWidget> {
                   Spacer(),
                   Container(
                     child: IconButton(
-                      icon: const Icon(Icons.send),
+                      icon: _isComposing
+                          ? GradientIcon(Icons.send)
+                          : Icon(Icons.send),
                       color: Theme.of(context).accentColor,
                       onPressed: _isComposing
                           ? () => _handleSubmitted(_textController.text,
@@ -676,7 +669,9 @@ class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
                   Spacer(),
                   Container(
                     child: IconButton(
-                      icon: const Icon(Icons.send),
+                      icon: _isComposing
+                          ? GradientIcon(Icons.send)
+                          : Icon(Icons.send),
                       color: Colors.blue,
                       onPressed: _isComposing
                           ? () => _handleSubmitted(

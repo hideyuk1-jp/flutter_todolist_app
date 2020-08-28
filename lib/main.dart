@@ -7,6 +7,7 @@ import 'package:flutter_todolist_app/Services/TaskService.dart';
 import 'package:flutter_todolist_app/TaskPage.dart';
 import 'package:flutter_todolist_app/CompletedTaskPage.dart';
 import 'package:flutter_todolist_app/Models/Task.dart';
+import 'package:flutter_todolist_app/CommonParts.dart';
 
 void main() {
   runApp(MyApp());
@@ -44,7 +45,7 @@ class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   PageController _pageController;
 
-  void _loadTasks() async {
+  Future<void> _loadTasks() async {
     Map<String, List<Task>> _tasksMapTmp =
         await _taskService.getIncompletedTasksGroupedByDueDate();
     Map<String, List<Task>> _completedTasksMapTmp =
@@ -92,8 +93,16 @@ class _HomePageState extends State<HomePage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.inbox), title: Text('ToDo')),
-          BottomNavigationBarItem(icon: Icon(Icons.check), title: Text('Done')),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.inbox),
+            activeIcon: GradientIcon(Icons.inbox),
+            title: Text('ToDo'),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.check),
+            activeIcon: GradientIcon(Icons.check),
+            title: Text('Done'),
+          ),
         ],
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
