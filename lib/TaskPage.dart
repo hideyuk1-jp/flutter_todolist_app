@@ -53,21 +53,26 @@ class _TaskPageState extends State<TaskPage>
         onRefresh: widget.loadTasks,
         child: widget.tasksMap.length == 0
             ? Center(
-                child: Container(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      GradientIcon(
-                        Icons.wb_sunny,
-                        size: 48,
+                child: ListView(
+                  shrinkWrap: true,
+                  children: [
+                    Container(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          GradientIcon(
+                            Icons.wb_sunny,
+                            size: 48,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 16.0),
+                          ),
+                          Text('未完了のタスクはありません'),
+                        ],
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(bottom: 16.0),
-                      ),
-                      Text('未完了のタスクはありません'),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               )
             : ListView(
