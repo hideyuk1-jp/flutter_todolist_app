@@ -50,24 +50,34 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
     return RefreshIndicator(
       onRefresh: widget.loadTasks,
       child: widget.tasksMap.length == 0
-          ? Center(
-              child: Container(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: <Widget>[
-                    GradientIcon(
-                      Icons.work_off,
-                      size: 48,
+          ? LayoutBuilder(builder: (context, constraints) {
+              return SingleChildScrollView(
+                // 中身の高さによらず常にバウンスさせる
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: ConstrainedBox(
+                  // 最小高さを親の高さと一緒にする
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        GradientIcon(
+                          Icons.work_off,
+                          size: 48,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(bottom: 16.0),
+                        ),
+                        Text('完了したタスクはありません'),
+                      ],
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(bottom: 16.0),
-                    ),
-                    Text('完了したタスクはありません'),
-                  ],
+                  ),
                 ),
-              ),
-            )
+              );
+            })
           : ListView(
               padding: EdgeInsets.only(
                 top: 4.0,
