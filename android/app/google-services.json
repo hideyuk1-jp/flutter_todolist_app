@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "921371839177",
+    "firebase_url": "https://todoist-app-db.firebaseio.com",
+    "project_id": "todoist-app-db",
+    "storage_bucket": "todoist-app-db.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:921371839177:android:12083be79aeb291c851b18",
+        "android_client_info": {
+          "package_name": "com.example.flutter_todolist_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "921371839177-sjmmurongeg49nr21aab2t3mbud31482.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEVWlk1W5jb-qbpE0c2orJbh_JFQE_yUs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "921371839177-sjmmurongeg49nr21aab2t3mbud31482.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
