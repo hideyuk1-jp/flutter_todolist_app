@@ -98,12 +98,13 @@ class TaskService implements TaskServiceInterface {
 
   Future toggleComplete(String uuid) async {
     Task task = await getTaskByUuid(uuid);
+    final now = DateTime.now();
     if (task.completedAt != null) {
       task.completedAt = null;
     } else {
-      final now = DateTime.now();
       task.completedAt = now.toUtc();
     }
+    task.updatedAt = now.toUtc();
     await _taskRepository.update(task);
   }
 }
