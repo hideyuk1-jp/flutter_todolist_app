@@ -1,5 +1,4 @@
 import 'package:intl/intl.dart';
-import 'package:uuid/uuid.dart';
 
 import 'package:flutter_todolist_app/Repositories/TaskRepositoryInterface.dart';
 import 'package:flutter_todolist_app/Services/TaskServiceInterface.dart';
@@ -72,7 +71,6 @@ class TaskService implements TaskServiceInterface {
   Future create(String text, DateTime dueDate, int estimatedMinutes) async {
     final now = DateTime.now();
     Task task = new Task.fromMap({
-      'uuid': Uuid().v4(),
       'text': text,
       'due_date': DateFormat('yyyy-MM-dd').format(dueDate),
       'estimated_minutes': estimatedMinutes,
