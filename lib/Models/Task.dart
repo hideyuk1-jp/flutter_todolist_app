@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Task {
   String uuid;
   String text;
@@ -29,6 +31,21 @@ class Task {
             : null,
         this.updatedAt = json['updated_at'] != null
             ? DateTime.parse(json['updated_at'])
+            : null;
+
+  Task.fromSnapshot(DocumentSnapshot snapshot)
+      : this.uuid = snapshot.documentID,
+        this.text = snapshot['text'],
+        this.dueDate = snapshot['dueDate'],
+        this.estimatedMinutes = snapshot['estimatedMinutes'],
+        this.completedAt = snapshot['completedAt'] != null
+            ? snapshot['completedAt'].toDate()
+            : null,
+        this.createdAt = snapshot['createdAt'] != null
+            ? snapshot['createdAt'].toDate()
+            : null,
+        this.updatedAt = snapshot['updatedAt'] != null
+            ? snapshot['updatedAt'].toDate()
             : null;
 
   Map<String, dynamic> toJson() => {

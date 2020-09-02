@@ -46,10 +46,12 @@ class _HomePageState extends State<HomePage> {
   PageController _pageController;
 
   Future<void> _loadTasks() async {
-    Map<String, List<Task>> _tasksMapTmp =
-        await _taskService.getIncompletedTasksGroupedByDueDate();
-    Map<String, List<Task>> _completedTasksMapTmp =
-        await _taskService.getCompletedTasksGroupedByCompleteDate();
+    List<Map> results = await Future.wait([
+      _taskService.getIncompletedTasksGroupedByDueDate(),
+      _taskService.getCompletedTasksGroupedByCompleteDate()
+    ]);
+    Map<String, List<Task>> _tasksMapTmp = results[0];
+    Map<String, List<Task>> _completedTasksMapTmp = results[1];
     setState(() {
       _tasksMap = _tasksMapTmp;
       _completedTasksMap = _completedTasksMapTmp;

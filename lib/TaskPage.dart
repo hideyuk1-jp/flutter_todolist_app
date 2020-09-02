@@ -558,15 +558,10 @@ class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
   double _estimatedMinutes;
 
   _TaskUpdateFormWidgetState({this.task}) {
-    _loadSingleTask();
     _textController = TextEditingController(text: task.text);
     _isComposing = task.text.length > 0;
     _dueDate = DateTime.parse(task.dueDate);
     _estimatedMinutes = task.estimatedMinutes.toDouble();
-  }
-
-  void _loadSingleTask() async {
-    task = await widget.taskService.getTaskByUuid(task.uuid);
   }
 
   @override
