@@ -7,11 +7,11 @@ import 'package:flutter_todolist_app/Models/Task.dart';
 import 'package:flutter_todolist_app/CommonParts.dart';
 
 class TaskPage extends StatefulWidget {
-  final Map<String, List<Task>> tasksMap;
+  final List<Task> tasks;
   final loadTasks;
   TaskPage({
     Key key,
-    this.tasksMap,
+    this.tasks,
     this.loadTasks,
   }) : super(key: key);
 
@@ -23,6 +23,22 @@ class _TaskPageState extends State<TaskPage>
     with AutomaticKeepAliveClientMixin {
   final FocusNode _focusNode = FocusNode();
   TaskService _taskService = TaskService(new TaskRepository());
+
+  Map<String, List<Task>> _formatTasks(List<Task> tasks) {
+    final today =
+        DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
+    Map<String, List<Task>> tasksGroupedByDueDate = {};
+    for (Task task in tasks) {
+      String key = DateTime.parse(task.dueDate).isBefore(today)
+          ? 'overdue'
+          : task.dueDate;
+      if (tasksGroupedByDueDate.containsKey(key))
+        tasksGroupedByDueDate[key].add(task);
+      else
+        tasksGroupedByDueDate[key] = [task];
+    }
+    return tasksGroupedByDueDate;
+  }
 
   String _dateFormatter(DateTime date) {
     DateTime today = new DateTime.now();
@@ -51,7 +67,7 @@ class _TaskPageState extends State<TaskPage>
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: widget.loadTasks,
-        child: widget.tasksMap.length == 0
+        child: widget.tasks.length == 0
             ? LayoutBuilder(builder: (context, constraints) {
                 return SingleChildScrollView(
                   // 中身の高さによらず常にバウンスさせる
@@ -87,7 +103,7 @@ class _TaskPageState extends State<TaskPage>
                   bottom: 80.0,
                   left: 4.0,
                 ),
-                children: widget.tasksMap.entries.map((e) {
+                children: _formatTasks(widget.tasks).entries.map((e) {
                   String key = e.key;
                   List<Task> tasks = e.value;
                   int etSum = tasks.fold(
@@ -756,7 +772,7 @@ class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
 
   void _handleSubmitted(String uuid, String text, DateTime dueDate,
       int estimatedMiutes, BuildContext context) async {
-    await widget.taskService.update(uuid, text, dueDate, estimatedMiutes);
+    widget.taskService.update(uuid, text, dueDate, estimatedMiutes);
     widget.focusNode.requestFocus();
     widget.loadTasks();
     Navigator.pop(context);
