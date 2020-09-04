@@ -7,11 +7,11 @@ import 'package:flutter_todolist_app/Models/Task.dart';
 import 'package:flutter_todolist_app/CommonParts.dart';
 
 class CompletedTaskPage extends StatefulWidget {
-  final Map<String, List<Task>> tasksMap;
+  final List<Task> tasks;
   final loadTasks;
   CompletedTaskPage({
     Key key,
-    this.tasksMap,
+    this.tasks,
     this.loadTasks,
   }) : super(key: key);
 
@@ -22,6 +22,18 @@ class CompletedTaskPage extends StatefulWidget {
 class _CompletedTaskPageState extends State<CompletedTaskPage>
     with AutomaticKeepAliveClientMixin {
   TaskService _taskService = TaskService(new TaskRepository());
+
+  Map<String, List<Task>> _formatTasks(List<Task> tasks) {
+    Map<String, List<Task>> tasksGroupedByCompleteDate = {};
+    for (Task task in tasks) {
+      String key = DateFormat('yyyy-MM-dd').format(task.completedAt.toLocal());
+      if (tasksGroupedByCompleteDate.containsKey(key))
+        tasksGroupedByCompleteDate[key].add(task);
+      else
+        tasksGroupedByCompleteDate[key] = [task];
+    }
+    return tasksGroupedByCompleteDate;
+  }
 
   String _dateFormatter(DateTime date) {
     DateTime today = new DateTime.now();
@@ -49,7 +61,7 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: widget.loadTasks,
-      child: widget.tasksMap.length == 0
+      child: widget.tasks.length == 0
           ? LayoutBuilder(builder: (context, constraints) {
               return SingleChildScrollView(
                 // 中身の高さによらず常にバウンスさせる
@@ -85,7 +97,7 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
                 bottom: 80.0,
                 left: 4.0,
               ),
-              children: widget.tasksMap.entries.map((e) {
+              children: _formatTasks(widget.tasks).entries.map((e) {
                 String key = e.key;
                 List<Task> tasks = e.value;
                 int etSum = tasks.fold(

@@ -39,22 +39,18 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Map<String, List<Task>> _tasksMap = {};
-  Map<String, List<Task>> _completedTasksMap = {};
+  List<Task> _todoTasks = <Task>[];
+  List<Task> _doneTasks = <Task>[];
   TaskService _taskService = TaskService(new TaskRepository());
   int _selectedIndex = 0;
   PageController _pageController;
 
   Future<void> _loadTasks() async {
-    List<Map> results = await Future.wait([
-      _taskService.getIncompletedTasksGroupedByDueDate(),
-      _taskService.getCompletedTasksGroupedByCompleteDate()
-    ]);
-    Map<String, List<Task>> _tasksMapTmp = results[0];
-    Map<String, List<Task>> _completedTasksMapTmp = results[1];
+    List<dynamic> results = await Future.wait(
+        [_taskService.getIncompletedTasks(), _taskService.getCompletedTasks()]);
     setState(() {
-      _tasksMap = _tasksMapTmp;
-      _completedTasksMap = _completedTasksMapTmp;
+      _todoTasks = results[0];
+      _doneTasks = results[1];
     });
   }
 
@@ -76,8 +72,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> _pageWidgets = [
-      TaskPage(tasksMap: _tasksMap, loadTasks: _loadTasks),
-      CompletedTaskPage(tasksMap: _completedTasksMap, loadTasks: _loadTasks),
+      TaskPage(tasks: _todoTasks, loadTasks: _loadTasks),
+      CompletedTaskPage(tasks: _doneTasks, loadTasks: _loadTasks),
     ];
 
     return Scaffold(
