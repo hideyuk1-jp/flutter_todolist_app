@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:flutter_todolist_app/Repositories/TaskRepositoryInterface.dart';
 import 'package:flutter_todolist_app/Services/TaskServiceInterface.dart';
@@ -10,31 +11,40 @@ class TaskService implements TaskServiceInterface {
   TaskService(this._taskRepository);
 
   Future<Task> getTaskByUuid(String uuid) async {
-    List<Task> tasks = await _taskRepository.read();
-    Task task = tasks.firstWhere((task) => task.uuid == uuid, orElse: null);
+    DocumentSnapshot doc = await _taskRepository.read().document(uuid).get();
+    Task task = Task.fromSnapshot(doc);
     return task;
   }
 
-  Future<List<Task>> getTasks() async {
-    List<Task> tasks = await _taskRepository.read();
-    tasks.sort((task1, task2) => task1.createdAt.compareTo(task2.createdAt));
-    return tasks;
+  Stream<List<Task>> getTasks() {
+    return _taskRepository.read().snapshots().asyncMap((snapshot) =>
+        snapshot.documents.map<Task>((doc) => Task.fromSnapshot(doc)).toList());
   }
 
-  Future<List<Task>> getCompletedTasks() async {
-    List<Task> tasks = await getTasks();
-    tasks = tasks.where((task) => task.completedAt != null).toList();
-    // 完了した時間が新しい順にソート
-    tasks
-        .sort((task1, task2) => task2.completedAt.compareTo(task1.completedAt));
-    return tasks;
+  Stream<List<Task>> getCompletedTasks() {
+    return _taskRepository
+        .read()
+        .orderBy('completedAt', descending: true)
+        .snapshots()
+        .asyncMap((snapshot) {
+      List<Task> tasks = [];
+      snapshot.documents.forEach((doc) {
+        if (doc['completedAt'] != null) tasks.add(Task.fromSnapshot(doc));
+      });
+      return tasks;
+    });
   }
 
-  Future<List<Task>> getIncompletedTasks() async {
-    List<Task> tasks = await getTasks();
-    tasks = tasks.where((task) => task.completedAt == null).toList();
-    tasks.sort((task1, task2) => task1.dueDate.compareTo(task2.dueDate));
-    return tasks;
+  Stream<List<Task>> getIncompletedTasks() {
+    return _taskRepository
+        .read()
+        .where('completedAt', isNull: true)
+        .orderBy('dueDate')
+        .orderBy('createdAt')
+        .snapshots()
+        .asyncMap((snapshot) => snapshot.documents
+            .map<Task>((doc) => Task.fromSnapshot(doc))
+            .toList());
   }
 
   Future create(String text, DateTime dueDate, int estimatedMinutes) async {

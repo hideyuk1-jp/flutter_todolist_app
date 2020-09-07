@@ -39,25 +39,20 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Task> _todoTasks = <Task>[];
-  List<Task> _doneTasks = <Task>[];
+  Stream<List<Task>> _todoTasks;
+  Stream<List<Task>> _doneTasks;
   TaskService _taskService = TaskService(new TaskRepository());
   int _selectedIndex = 0;
   PageController _pageController;
 
-  Future<void> _loadTasks() async {
-    List<dynamic> results = await Future.wait(
-        [_taskService.getIncompletedTasks(), _taskService.getCompletedTasks()]);
-    setState(() {
-      _todoTasks = results[0];
-      _doneTasks = results[1];
-    });
+  _HomePageState() {
+    this._todoTasks = _taskService.getIncompletedTasks();
+    this._doneTasks = _taskService.getCompletedTasks();
   }
 
   @override
   void initState() {
     super.initState();
-    _loadTasks();
     _pageController = PageController(
       initialPage: _selectedIndex,
     );
@@ -72,8 +67,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> _pageWidgets = [
-      TaskPage(tasks: _todoTasks, loadTasks: _loadTasks),
-      CompletedTaskPage(tasks: _doneTasks, loadTasks: _loadTasks),
+      TaskPage(tasksStream: _todoTasks),
+      CompletedTaskPage(tasksStream: _doneTasks),
     ];
 
     return Scaffold(
@@ -113,6 +108,5 @@ class _HomePageState extends State<HomePage> {
   void _onItemTapped(int index) {
     _pageController.animateToPage(index,
         duration: Duration(milliseconds: 160), curve: Curves.easeIn);
-    //setState(() => _selectedIndex = index);
   }
 }

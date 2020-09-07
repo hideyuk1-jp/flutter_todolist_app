@@ -17,9 +17,8 @@ class TaskRepository implements TaskRepositoryInterface {
     });
   }
 
-  Future<List<Task>> read() async {
-    QuerySnapshot qs = await _tasksReference.getDocuments();
-    return qs.documents.map((ds) => Task.fromSnapshot(ds)).toList();
+  CollectionReference read() {
+    return _tasksReference;
   }
 
   Future update(Task task) async {
