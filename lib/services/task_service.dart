@@ -1,9 +1,9 @@
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:flutter_todolist_app/Repositories/TaskRepositoryInterface.dart';
-import 'package:flutter_todolist_app/Services/TaskServiceInterface.dart';
-import 'package:flutter_todolist_app/Models/Task.dart';
+import 'package:flutter_todolist_app/repositories/task_repository_interface.dart';
+import 'package:flutter_todolist_app/services/task_service_interface.dart';
+import 'package:flutter_todolist_app/models/task.dart';
 
 class TaskService implements TaskServiceInterface {
   final TaskRepositoryInterface _taskRepository;

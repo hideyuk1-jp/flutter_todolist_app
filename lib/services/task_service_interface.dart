@@ -1,4 +1,4 @@
-import 'package:flutter_todolist_app/Models/Task.dart';
+import 'package:flutter_todolist_app/models/task.dart';
 
 abstract class TaskServiceInterface {
   Future<Task> getTaskByUuid(String uuid);

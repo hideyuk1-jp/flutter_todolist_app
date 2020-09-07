@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'package:flutter_todolist_app/Repositories/TaskRepository.dart';
-import 'package:flutter_todolist_app/Services/TaskService.dart';
-import 'package:flutter_todolist_app/Models/Task.dart';
-import 'package:flutter_todolist_app/CommonParts.dart';
+import 'package:flutter_todolist_app/repositories/task_repository.dart';
+import 'package:flutter_todolist_app/services/task_service.dart';
+import 'package:flutter_todolist_app/models/task.dart';
+import 'package:flutter_todolist_app/common_parts.dart';
 
 class TaskPage extends StatefulWidget {
   final Stream<List<Task>> tasksStream;

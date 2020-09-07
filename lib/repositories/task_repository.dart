@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:flutter_todolist_app/Repositories/TaskRepositoryInterface.dart';
-import 'package:flutter_todolist_app/Models/Task.dart';
+import 'package:flutter_todolist_app/repositories/task_repository_interface.dart';
+import 'package:flutter_todolist_app/models/task.dart';
 
 class TaskRepository implements TaskRepositoryInterface {
   final _tasksReference = Firestore.instance.collection('tasks');
