@@ -1,26 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import 'package:flutter_todolist_app/repositories/task_repository.dart';
 import 'package:flutter_todolist_app/services/task_service.dart';
 import 'package:flutter_todolist_app/models/task.dart';
 import 'package:flutter_todolist_app/common_parts.dart';
 
-class TaskPage extends StatefulWidget {
-  final Stream<List<Task>> tasksStream;
-  TaskPage({
-    Key key,
-    this.tasksStream,
-  }) : super(key: key);
-
-  @override
-  _TaskPageState createState() => _TaskPageState();
-}
-
-class _TaskPageState extends State<TaskPage>
-    with AutomaticKeepAliveClientMixin {
+class TodosPage extends HookWidget {
   final FocusNode _focusNode = FocusNode();
-  TaskService _taskService = TaskService(new TaskRepository());
 
   Map<String, List<Task>> _formatTasks(List<Task> tasks) {
     final today =
@@ -52,13 +40,10 @@ class _TaskPageState extends State<TaskPage>
   }
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: StreamBuilder(
-          stream: widget.tasksStream,
+          stream: useProvider(taskService).getTodos(),
           builder: (_, AsyncSnapshot<List<Task>> snapshot) {
             List<Task> tasks = snapshot.data;
             return tasks == null || tasks.length == 0
@@ -188,7 +173,8 @@ class _TaskPageState extends State<TaskPage>
                                         BorderRadius.all(Radius.circular(8.0)),
                                   ),
                                   child: InkWell(
-                                    onTap: () => _openUpdateFormModal(task),
+                                    onTap: () =>
+                                        _openUpdateFormModal(context, task),
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.start,
@@ -206,7 +192,7 @@ class _TaskPageState extends State<TaskPage>
                                               color: Colors.grey[600],
                                             ),
                                             onPressed: () =>
-                                                _handleCompleted(task),
+                                                _handleCompleted(context, task),
                                             enableFeedback: false,
                                           ),
                                         ),
@@ -334,14 +320,14 @@ class _TaskPageState extends State<TaskPage>
                   );
           }),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _openCreateFormModal(),
+        onPressed: () => _openCreateFormModal(context),
         tooltip: 'タスクを追加',
         child: GradientCircleIconButton(icon: Icon(Icons.add)),
       ),
     );
   }
 
-  void _openCreateFormModal() {
+  void _openCreateFormModal(BuildContext context) {
     showModalBottomSheet(
       isScrollControlled: true,
       context: context,
@@ -352,14 +338,13 @@ class _TaskPageState extends State<TaskPage>
         return StatefulBuilder(builder: (BuildContext context, setState) {
           return TaskCreateFormWidget(
             focusNode: _focusNode,
-            taskService: _taskService,
           );
         });
       },
     );
   }
 
-  void _openUpdateFormModal(Task task) {
+  void _openUpdateFormModal(BuildContext context, Task task) {
     showModalBottomSheet(
       isScrollControlled: true,
       context: context,
@@ -371,15 +356,14 @@ class _TaskPageState extends State<TaskPage>
           return TaskUpdateFormWidget(
             task: task,
             focusNode: _focusNode,
-            taskService: _taskService,
           );
         });
       },
     );
   }
 
-  void _handleCompleted(Task task) async {
-    _taskService.toggleComplete(task.uuid);
+  void _handleCompleted(BuildContext context, Task task) async {
+    context.read(taskService).toggleComplete(task.uuid);
   }
 }
 
@@ -497,7 +481,7 @@ class _TaskCreateFormWidgetState extends State<TaskCreateFormWidget> {
 
   void _handleSubmitted(String text, DateTime dueDate, int estimatedMiutes,
       BuildContext context) async {
-    widget.taskService.create(text, dueDate, estimatedMiutes);
+    context.read(taskService).create(text, dueDate, estimatedMiutes);
     _textController.clear();
     setState(() {
       _isComposing = false;
@@ -822,7 +806,7 @@ class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
 
   void _handleSubmitted(String uuid, String text, DateTime dueDate,
       int estimatedMiutes, BuildContext context) async {
-    widget.taskService.update(uuid, text, dueDate, estimatedMiutes);
+    context.read(taskService).update(uuid, text, dueDate, estimatedMiutes);
     widget.focusNode.requestFocus();
     Navigator.pop(context);
   }
@@ -857,7 +841,7 @@ class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
   }
 
   void _handleDeleted(String uuid) async {
-    widget.taskService.delete(uuid);
+    context.read(taskService).delete(uuid);
     widget.focusNode.requestFocus();
     Navigator.of(context).popUntil((route) => route.isFirst);
   }

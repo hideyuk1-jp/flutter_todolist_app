@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:gradient_app_bar/gradient_app_bar.dart';
 
-import 'package:flutter_todolist_app/repositories/task_repository.dart';
-import 'package:flutter_todolist_app/services/task_service.dart';
-import 'package:flutter_todolist_app/models/task.dart';
 import 'package:flutter_todolist_app/common_parts.dart';
-import 'package:flutter_todolist_app/pages/task_page.dart';
-import 'package:flutter_todolist_app/pages/completed_task_page.dart';
+import 'package:flutter_todolist_app/pages/todos_page.dart';
+import 'package:flutter_todolist_app/pages/dones_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -14,16 +11,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  Stream<List<Task>> _todoTasks;
-  Stream<List<Task>> _doneTasks;
-  TaskService _taskService = TaskService(new TaskRepository());
   int _selectedIndex = 0;
   PageController _pageController;
-
-  _HomePageState() {
-    this._todoTasks = _taskService.getIncompletedTasks();
-    this._doneTasks = _taskService.getCompletedTasks();
-  }
 
   @override
   void initState() {
@@ -42,8 +31,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final List<Widget> _pageWidgets = [
-      TaskPage(tasksStream: _todoTasks),
-      CompletedTaskPage(tasksStream: _doneTasks),
+      TodosPage(),
+      DonesPage(),
     ];
 
     return Scaffold(

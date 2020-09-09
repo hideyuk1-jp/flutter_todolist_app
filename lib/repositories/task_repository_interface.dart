@@ -4,7 +4,7 @@ import 'package:flutter_todolist_app/models/task.dart';
 
 abstract class TaskRepositoryInterface {
   Future create(Task task);
-  CollectionReference read();
+  CollectionReference ref();
   Future update(Task task);
   Future delete(Task task);
 }

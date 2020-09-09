@@ -1,29 +1,34 @@
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import 'package:flutter_todolist_app/repositories/task_repository_interface.dart';
+import 'package:flutter_todolist_app/repositories/task_repository.dart';
 import 'package:flutter_todolist_app/services/task_service_interface.dart';
 import 'package:flutter_todolist_app/models/task.dart';
 
-class TaskService implements TaskServiceInterface {
-  final TaskRepositoryInterface _taskRepository;
+final taskService =
+    Provider.autoDispose<TaskServiceInterface>((ref) => TaskService(ref.read));
 
-  TaskService(this._taskRepository);
+class TaskService implements TaskServiceInterface {
+  final Reader read;
+
+  TaskService(this.read);
 
   Future<Task> getTaskByUuid(String uuid) async {
-    DocumentSnapshot doc = await _taskRepository.read().document(uuid).get();
+    DocumentSnapshot doc =
+        await read(taskRepository).ref().document(uuid).get();
     Task task = Task.fromSnapshot(doc);
     return task;
   }
 
   Stream<List<Task>> getTasks() {
-    return _taskRepository.read().snapshots().asyncMap((snapshot) =>
+    return read(taskRepository).ref().snapshots().asyncMap((snapshot) =>
         snapshot.documents.map<Task>((doc) => Task.fromSnapshot(doc)).toList());
   }
 
-  Stream<List<Task>> getCompletedTasks() {
-    return _taskRepository
-        .read()
+  Stream<List<Task>> getDones() {
+    return read(taskRepository)
+        .ref()
         .orderBy('completedAt', descending: true)
         .snapshots()
         .asyncMap((snapshot) {
@@ -35,9 +40,9 @@ class TaskService implements TaskServiceInterface {
     });
   }
 
-  Stream<List<Task>> getIncompletedTasks() {
-    return _taskRepository
-        .read()
+  Stream<List<Task>> getTodos() {
+    return read(taskRepository)
+        .ref()
         .where('completedAt', isNull: true)
         .orderBy('dueDate')
         .orderBy('createdAt')
@@ -56,7 +61,7 @@ class TaskService implements TaskServiceInterface {
       'created_at': now.toUtc(),
       'updated_at': now.toUtc()
     });
-    await _taskRepository.create(task);
+    await read(taskRepository).create(task);
   }
 
   Future update(
@@ -67,12 +72,12 @@ class TaskService implements TaskServiceInterface {
     task.dueDate = DateFormat('yyyy-MM-dd').format(dueDate);
     task.estimatedMinutes = estimatedMinutes;
     task.updatedAt = now.toUtc();
-    await _taskRepository.update(task);
+    await read(taskRepository).update(task);
   }
 
   Future delete(String uuid) async {
     Task task = await getTaskByUuid(uuid);
-    await _taskRepository.delete(task);
+    await read(taskRepository).delete(task);
   }
 
   Future toggleComplete(String uuid) async {
@@ -84,6 +89,6 @@ class TaskService implements TaskServiceInterface {
       task.completedAt = now.toUtc();
     }
     task.updatedAt = now.toUtc();
-    await _taskRepository.update(task);
+    await read(taskRepository).update(task);
   }
 }

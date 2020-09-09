@@ -1,26 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-import 'package:flutter_todolist_app/repositories/task_repository.dart';
 import 'package:flutter_todolist_app/services/task_service.dart';
 import 'package:flutter_todolist_app/models/task.dart';
 import 'package:flutter_todolist_app/common_parts.dart';
 
-class CompletedTaskPage extends StatefulWidget {
-  final Stream<List<Task>> tasksStream;
-  CompletedTaskPage({
-    Key key,
-    this.tasksStream,
-  }) : super(key: key);
-
-  @override
-  _CompletedTaskPageState createState() => _CompletedTaskPageState();
-}
-
-class _CompletedTaskPageState extends State<CompletedTaskPage>
-    with AutomaticKeepAliveClientMixin {
-  TaskService _taskService = TaskService(new TaskRepository());
-
+class DonesPage extends HookWidget {
   Map<String, List<Task>> _formatTasks(List<Task> tasks) {
     Map<String, List<Task>> tasksGroupedByCompleteDate = {};
     for (Task task in tasks) {
@@ -47,12 +34,9 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
   }
 
   @override
-  bool get wantKeepAlive => true;
-
-  @override
   Widget build(BuildContext context) {
     return StreamBuilder(
-        stream: widget.tasksStream,
+        stream: useProvider(taskService).getDones(),
         builder: (_, AsyncSnapshot<List<Task>> snapshot) {
           List<Task> tasks = snapshot.data;
           return tasks == null || tasks.length == 0
@@ -183,7 +167,7 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
                                             color: Colors.grey[600],
                                           ),
                                           onPressed: () =>
-                                              _handleCompleted(task),
+                                              _handleCompleted(context, task),
                                           enableFeedback: false,
                                         ),
                                       ),
@@ -310,7 +294,7 @@ class _CompletedTaskPageState extends State<CompletedTaskPage>
         });
   }
 
-  void _handleCompleted(Task task) async {
-    _taskService.toggleComplete(task.uuid);
+  void _handleCompleted(BuildContext context, Task task) async {
+    context.read(taskService).toggleComplete(task.uuid);
   }
 }
