@@ -26,6 +26,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   cloud_firestore: ^0.13.0+1
+  flutter_hooks: ^0.14.0
+  hooks_riverpod: ^0.9.1
   gradient_app_bar: ^0.0.1
 
   # The following adds the Cupertino Icons font to your application.

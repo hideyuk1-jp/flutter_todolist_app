@@ -1,10 +1,10 @@
-import 'package:flutter_todolist_app/Models/Task.dart';
+import 'package:flutter_todolist_app/models/task.dart';
 
 abstract class TaskServiceInterface {
   Future<Task> getTaskByUuid(String uuid);
-  Future<List<Task>> getTasks();
-  Future<List<Task>> getCompletedTasks();
-  Future<List<Task>> getIncompletedTasks();
+  Stream<List<Task>> getTasks();
+  Stream<List<Task>> getTodos();
+  Stream<List<Task>> getDones();
   Future create(String text, DateTime dueDate, int estimatedMinutes);
   Future update(
       String uuid, String text, DateTime dueDate, int estimatedMinutes);
