@@ -7,9 +7,24 @@ import 'package:flutter_todolist_app/services/task_service.dart';
 import 'package:flutter_todolist_app/models/task.dart';
 import 'package:flutter_todolist_app/common_parts.dart';
 
-class TodosPage extends HookWidget {
-  final FocusNode _focusNode = FocusNode();
+class TodosPage extends StatefulWidget {
+  @override
+  _TodosPageState createState() => _TodosPageState();
+}
 
+class _TodosPageState extends State<TodosPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return TodosPageBody();
+  }
+}
+
+class TodosPageBody extends HookWidget {
   Map<String, List<Task>> _formatTasks(List<Task> tasks) {
     final today =
         DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
@@ -335,11 +350,7 @@ class TodosPage extends HookWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(8.0)),
       ),
       builder: (BuildContext context) {
-        return StatefulBuilder(builder: (BuildContext context, setState) {
-          return TaskCreateFormWidget(
-            focusNode: _focusNode,
-          );
-        });
+        return TaskCreateFormWidget();
       },
     );
   }
@@ -355,7 +366,6 @@ class TodosPage extends HookWidget {
         return StatefulBuilder(builder: (BuildContext context, setState) {
           return TaskUpdateFormWidget(
             task: task,
-            focusNode: _focusNode,
           );
         });
       },
@@ -367,25 +377,19 @@ class TodosPage extends HookWidget {
   }
 }
 
-class TaskCreateFormWidget extends StatefulWidget {
-  final FocusNode focusNode;
-  final TaskService taskService;
+final createFormProvider = ChangeNotifierProvider((ref) => FormNotifier());
 
-  TaskCreateFormWidget({this.focusNode, this.taskService});
-
-  @override
-  _TaskCreateFormWidgetState createState() => _TaskCreateFormWidgetState();
+class FormNotifier with ChangeNotifier {
+  TextEditingController textController = TextEditingController();
+  bool isComposing = false;
+  DateTime dueDate = new DateTime.now();
+  double estimatedMinutes = 0.0;
 }
 
-class _TaskCreateFormWidgetState extends State<TaskCreateFormWidget> {
-  TextEditingController _textController = TextEditingController();
-  bool _isComposing = false;
-  DateTime _dueDate = new DateTime.now();
-  double _estimatedMinutes = 0.0;
-  double _estimatedMinutesTmp = 0.0;
-
+class TaskCreateFormWidget extends HookWidget {
   @override
   Widget build(BuildContext context) {
+    final createForm = useProvider(createFormProvider);
     return SingleChildScrollView(
       child: Padding(
         padding: EdgeInsets.all(16.0),
@@ -395,19 +399,19 @@ class _TaskCreateFormWidgetState extends State<TaskCreateFormWidget> {
           child: Column(
             children: <Widget>[
               TextField(
-                controller: _textController,
+                controller: createForm.textController,
                 onChanged: (String text) {
-                  setState(() {
-                    _isComposing = text.length > 0;
-                  });
+                  createForm.isComposing = text.length > 0;
                 },
-                onSubmitted: _isComposing
+                onSubmitted: createForm.isComposing
                     ? (String text) => _handleSubmitted(
-                        text, _dueDate, _estimatedMinutes.round(), context)
+                        text,
+                        createForm.dueDate,
+                        createForm.estimatedMinutes.round(),
+                        context)
                     : null,
                 autofocus: true,
                 decoration: InputDecoration.collapsed(hintText: 'タスクの内容を入力'),
-                focusNode: widget.focusNode,
               ),
               Padding(
                 padding: EdgeInsets.only(bottom: 8.0),
@@ -422,7 +426,7 @@ class _TaskCreateFormWidgetState extends State<TaskCreateFormWidget> {
                         size: 16.0,
                       ),
                       label: Text(
-                        _dateFormatter(_dueDate),
+                        _dateFormatter(createForm.dueDate),
                         style: TextStyle(
                           color: Colors.green,
                           fontSize: 14,
@@ -443,14 +447,15 @@ class _TaskCreateFormWidgetState extends State<TaskCreateFormWidget> {
                         size: 16.0,
                       ),
                       label: Text(
-                        _estimatedMinutes > 0
-                            ? _estimatedMinutes.round().toString() + '分'
+                        createForm.estimatedMinutes > 0
+                            ? createForm.estimatedMinutes.round().toString() +
+                                '分'
                             : '時間なし',
                         style: TextStyle(
                           fontSize: 14,
                         ),
                       ),
-                      onPressed: () => _openTimeSliderDialog(context, setState),
+                      onPressed: () => _openTimeSliderDialog(context),
                       color: Colors.green,
                       shape: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(8.0)),
@@ -460,13 +465,16 @@ class _TaskCreateFormWidgetState extends State<TaskCreateFormWidget> {
                   Spacer(),
                   Container(
                     child: IconButton(
-                      icon: _isComposing
+                      icon: createForm.isComposing
                           ? GradientIcon(Icons.send)
                           : Icon(Icons.send),
                       color: Theme.of(context).accentColor,
-                      onPressed: _isComposing
-                          ? () => _handleSubmitted(_textController.text,
-                              _dueDate, _estimatedMinutes.round(), context)
+                      onPressed: createForm.isComposing
+                          ? () => _handleSubmitted(
+                              createForm.textController.text,
+                              createForm.dueDate,
+                              createForm.estimatedMinutes.round(),
+                              context)
                           : null,
                     ),
                   ),
@@ -481,77 +489,37 @@ class _TaskCreateFormWidgetState extends State<TaskCreateFormWidget> {
 
   void _handleSubmitted(String text, DateTime dueDate, int estimatedMiutes,
       BuildContext context) async {
+    final createForm = context.read(createFormProvider);
     context.read(taskService).create(text, dueDate, estimatedMiutes);
-    _textController.clear();
-    setState(() {
-      _isComposing = false;
-      _dueDate = new DateTime.now();
-      _estimatedMinutes = 0.0;
-    });
-    widget.focusNode.requestFocus();
+    createForm.textController.clear();
+    createForm.isComposing = false;
+    createForm.dueDate = new DateTime.now();
+    createForm.estimatedMinutes = 0.0;
     Navigator.pop(context);
   }
 
   Future<Null> _selectDueDate(BuildContext context) async {
+    final createForm = context.read(createFormProvider);
     final DateTime picked = await showDatePicker(
         helpText: '期限を選択',
         context: context,
         locale: const Locale("ja"),
-        initialDate: _dueDate,
+        initialDate: createForm.dueDate,
         firstDate: new DateTime(2016),
         lastDate: new DateTime.now().add(new Duration(days: 360)));
-    if (picked != null) setState(() => _dueDate = picked);
+    if (picked != null) createForm.dueDate = picked;
   }
 
-  void _openTimeSliderDialog(BuildContext context, setState) {
-    showDialog(
+  void _openTimeSliderDialog(BuildContext context) async {
+    double _time = await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder(builder: (BuildContext context, setState) {
-          return AlertDialog(
-            title: Text(
-              'タスクの完了にかかる時間',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16),
-            ),
-            content: SingleChildScrollView(
-              child: Slider(
-                value: _estimatedMinutesTmp,
-                label: _estimatedMinutesTmp > 0
-                    ? _estimatedMinutesTmp.round().toString() + '分'
-                    : '時間なし',
-                min: 0,
-                max: 360,
-                divisions: 24,
-                onChanged: (double value) {
-                  setState(() {
-                    _estimatedMinutesTmp = value;
-                  });
-                },
-              ),
-            ),
-            actions: <Widget>[
-              FlatButton(
-                child: Text("キャンセル"),
-                onPressed: () {
-                  _estimatedMinutesTmp = _estimatedMinutes;
-                  Navigator.pop(context);
-                },
-              ),
-              FlatButton(
-                child: Text("OK"),
-                onPressed: () {
-                  setState(() {
-                    _estimatedMinutes = _estimatedMinutesTmp;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          );
-        });
+        return TimePickerDialog(
+            initialTime: context.read(createFormProvider).estimatedMinutes);
       },
     );
+    if (_time != null)
+      context.read(createFormProvider).estimatedMinutes = _time;
   }
 
   String _dateFormatter(DateTime date) {
@@ -568,36 +536,80 @@ class _TaskCreateFormWidgetState extends State<TaskCreateFormWidget> {
   }
 }
 
-class TaskUpdateFormWidget extends StatefulWidget {
-  final Task task;
-  final FocusNode focusNode;
-  final TaskService taskService;
+class TimePickerDialog extends StatefulWidget {
+  final double initialTime;
 
-  TaskUpdateFormWidget({this.task, this.focusNode, this.taskService});
-
+  const TimePickerDialog({Key key, this.initialTime}) : super(key: key);
   @override
-  _TaskUpdateFormWidgetState createState() =>
-      _TaskUpdateFormWidgetState(task: task);
+  _TimePickerDialogState createState() => _TimePickerDialogState();
 }
 
-class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
-  Task task;
-  TextEditingController _textController;
-  bool _isComposing;
-  DateTime _dueDate;
-  double _estimatedMinutes;
-  double _estimatedMinutesTmp;
+class _TimePickerDialogState extends State<TimePickerDialog> {
+  double _time;
 
-  _TaskUpdateFormWidgetState({this.task}) {
-    _textController = TextEditingController(text: task.text);
-    _isComposing = task.text.length > 0;
-    _dueDate = DateTime.parse(task.dueDate);
-    _estimatedMinutes = task.estimatedMinutes.toDouble();
-    _estimatedMinutesTmp = task.estimatedMinutes.toDouble();
+  @override
+  void initState() {
+    super.initState();
+    _time = widget.initialTime;
   }
 
   @override
   Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        'タスクの完了にかかる時間',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 16),
+      ),
+      content: SingleChildScrollView(
+        child: Slider(
+          value: _time,
+          label: _time > 0 ? _time.round().toString() + '分' : '時間なし',
+          min: 0,
+          max: 360,
+          divisions: 24,
+          onChanged: (double value) {
+            setState(() {
+              _time = value;
+            });
+          },
+        ),
+      ),
+      actions: <Widget>[
+        FlatButton(
+          child: Text("キャンセル"),
+          onPressed: () => Navigator.pop(context),
+        ),
+        FlatButton(
+          child: Text("OK"),
+          onPressed: () {
+            Navigator.pop(context, _time);
+          },
+        ),
+      ],
+    );
+  }
+}
+
+final updateFormProvider = ChangeNotifierProvider((ref) => FormNotifier());
+
+class TaskUpdateFormWidget extends HookWidget {
+  final Task task;
+
+  TaskUpdateFormWidget({this.task});
+
+  @override
+  Widget build(BuildContext context) {
+    final updateForm = useProvider(updateFormProvider);
+
+    useEffect(() {
+      updateForm.textController = TextEditingController(text: task.text);
+      updateForm.isComposing = task.text.length > 0;
+      updateForm.dueDate = DateTime.parse(task.dueDate);
+      updateForm.estimatedMinutes = task.estimatedMinutes.toDouble();
+      return null;
+    }, const []);
+
     return SingleChildScrollView(
       child: Padding(
         padding:
@@ -629,31 +641,28 @@ class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.all(Radius.circular(8.0)),
                       ),
-                      onPressed: () => _openDeleteAlertDialog(),
+                      onPressed: () => _openDeleteAlertDialog(context),
                     ),
                   ],
                 ),
               ),
               Divider(),
               TextField(
-                controller: _textController,
+                controller: updateForm.textController,
                 onChanged: (String text) {
-                  setState(() {
-                    _isComposing = text.length > 0;
-                  });
+                  updateForm.isComposing = text.length > 0;
                 },
-                onSubmitted: _isComposing
+                onSubmitted: updateForm.isComposing
                     ? (String text) => _handleSubmitted(
                           task.uuid,
                           text,
-                          _dueDate,
-                          _estimatedMinutes.round(),
+                          updateForm.dueDate,
+                          updateForm.estimatedMinutes.round(),
                           context,
                         )
                     : null,
                 autofocus: true,
                 decoration: InputDecoration.collapsed(hintText: 'タスクの内容を入力'),
-                focusNode: widget.focusNode,
               ),
               Padding(
                 padding: EdgeInsets.only(bottom: 8.0),
@@ -668,7 +677,7 @@ class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
                         size: 16.0,
                       ),
                       label: Text(
-                        _dateFormatter(_dueDate),
+                        _dateFormatter(updateForm.dueDate),
                         style: TextStyle(
                           color: Colors.green,
                           fontSize: 14,
@@ -689,14 +698,15 @@ class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
                         size: 16.0,
                       ),
                       label: Text(
-                        _estimatedMinutes > 0
-                            ? _estimatedMinutes.round().toString() + '分'
+                        updateForm.estimatedMinutes > 0
+                            ? updateForm.estimatedMinutes.round().toString() +
+                                '分'
                             : '時間なし',
                         style: TextStyle(
                           fontSize: 14,
                         ),
                       ),
-                      onPressed: () => _openTimeSliderDialog(context, setState),
+                      onPressed: () => _openTimeSliderDialog(context),
                       color: Colors.green,
                       shape: OutlineInputBorder(
                         borderRadius: BorderRadius.all(Radius.circular(8.0)),
@@ -706,16 +716,16 @@ class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
                   Spacer(),
                   Container(
                     child: IconButton(
-                      icon: _isComposing
+                      icon: updateForm.isComposing
                           ? GradientIcon(Icons.send)
                           : Icon(Icons.send),
                       color: Colors.blue,
-                      onPressed: _isComposing
+                      onPressed: updateForm.isComposing
                           ? () => _handleSubmitted(
                                 task.uuid,
-                                _textController.text,
-                                _dueDate,
-                                _estimatedMinutes.round(),
+                                updateForm.textController.text,
+                                updateForm.dueDate,
+                                updateForm.estimatedMinutes.round(),
                                 context,
                               )
                           : null,
@@ -731,64 +741,26 @@ class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
   }
 
   Future<Null> _selectDueDate(BuildContext context) async {
+    final updateForm = context.read(updateFormProvider);
     final DateTime picked = await showDatePicker(
         context: context,
         locale: const Locale("ja"),
-        initialDate: _dueDate,
+        initialDate: updateForm.dueDate,
         firstDate: new DateTime(2016),
         lastDate: new DateTime.now().add(new Duration(days: 360)));
-    if (picked != null) setState(() => _dueDate = picked);
+    if (picked != null) updateForm.dueDate = picked;
   }
 
-  void _openTimeSliderDialog(BuildContext context, setState) {
-    showDialog(
+  void _openTimeSliderDialog(BuildContext context) async {
+    double _time = await showDialog(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder(builder: (BuildContext context, setState) {
-          return AlertDialog(
-            title: Text(
-              'タスクの完了にかかる時間',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16),
-            ),
-            content: SingleChildScrollView(
-              child: Slider(
-                value: _estimatedMinutesTmp,
-                label: _estimatedMinutesTmp > 0
-                    ? _estimatedMinutesTmp.round().toString() + '分'
-                    : '時間なし',
-                min: 0,
-                max: 360,
-                divisions: 24,
-                onChanged: (double value) {
-                  setState(() {
-                    _estimatedMinutesTmp = value;
-                  });
-                },
-              ),
-            ),
-            actions: <Widget>[
-              FlatButton(
-                child: Text("キャンセル"),
-                onPressed: () {
-                  _estimatedMinutesTmp = _estimatedMinutes;
-                  Navigator.pop(context);
-                },
-              ),
-              FlatButton(
-                child: Text("OK"),
-                onPressed: () {
-                  setState(() {
-                    _estimatedMinutes = _estimatedMinutesTmp;
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          );
-        });
+        return TimePickerDialog(
+            initialTime: context.read(updateFormProvider).estimatedMinutes);
       },
     );
+    if (_time != null)
+      context.read(updateFormProvider).estimatedMinutes = _time;
   }
 
   String _dateFormatter(DateTime date) {
@@ -807,11 +779,10 @@ class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
   void _handleSubmitted(String uuid, String text, DateTime dueDate,
       int estimatedMiutes, BuildContext context) async {
     context.read(taskService).update(uuid, text, dueDate, estimatedMiutes);
-    widget.focusNode.requestFocus();
     Navigator.pop(context);
   }
 
-  void _openDeleteAlertDialog() async {
+  void _openDeleteAlertDialog(BuildContext context) async {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
@@ -832,7 +803,7 @@ class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
             ),
             FlatButton(
               child: Text('はい'),
-              onPressed: () => _handleDeleted(task.uuid),
+              onPressed: () => _handleDeleted(task.uuid, context),
             ),
           ],
         );
@@ -840,9 +811,8 @@ class _TaskUpdateFormWidgetState extends State<TaskUpdateFormWidget> {
     );
   }
 
-  void _handleDeleted(String uuid) async {
+  void _handleDeleted(String uuid, BuildContext context) async {
     context.read(taskService).delete(uuid);
-    widget.focusNode.requestFocus();
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 }

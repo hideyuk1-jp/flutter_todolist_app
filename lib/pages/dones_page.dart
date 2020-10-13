@@ -7,7 +7,24 @@ import 'package:flutter_todolist_app/services/task_service.dart';
 import 'package:flutter_todolist_app/models/task.dart';
 import 'package:flutter_todolist_app/common_parts.dart';
 
-class DonesPage extends HookWidget {
+class DonesPage extends StatefulWidget {
+  @override
+  _DonesPageState createState() => _DonesPageState();
+}
+
+class _DonesPageState extends State<DonesPage>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return DonesPageBody();
+  }
+}
+
+class DonesPageBody extends HookWidget {
   Map<String, List<Task>> _formatTasks(List<Task> tasks) {
     Map<String, List<Task>> tasksGroupedByCompleteDate = {};
     for (Task task in tasks) {
