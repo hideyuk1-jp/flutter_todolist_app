@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "921371839177-1v6mlkee0c3lg54iijii047s9butkomc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.flutter_todolist_app",
+            "certificate_hash": "c93ee718bee2e1c0f6436946f80e9be30cf36518"
+          }
+        },
+        {
           "client_id": "921371839177-sjmmurongeg49nr21aab2t3mbud31482.apps.googleusercontent.com",
           "client_type": 3
         }
