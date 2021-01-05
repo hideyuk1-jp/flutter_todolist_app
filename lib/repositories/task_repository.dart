@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_todolist_app/models/user.dart';
+import 'package:flutter_todolist_app/user_view_model.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:flutter_todolist_app/repositories/task_repository_interface.dart';
@@ -9,12 +11,11 @@ final taskRepository = Provider.autoDispose<TaskRepositoryInterface>(
 
 class TaskRepository implements TaskRepositoryInterface {
   final Reader read;
-  final _tasksReference = Firestore.instance.collection('tasks');
 
   TaskRepository(this.read);
 
   Future create(Task task) async {
-    return _tasksReference.add({
+    return this.ref().add({
       'text': task.text,
       'dueDate': task.dueDate,
       'estimatedMinutes': task.estimatedMinutes,
@@ -25,11 +26,16 @@ class TaskRepository implements TaskRepositoryInterface {
   }
 
   CollectionReference ref() {
-    return _tasksReference;
+    User user = read(userViewModelProvider).user;
+    if (user == null) return null;
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.id)
+        .collection('tasks');
   }
 
   Future update(Task task) async {
-    return _tasksReference.document(task.uuid).updateData({
+    return this.ref().doc(task.uuid).update({
       'text': task.text,
       'dueDate': task.dueDate,
       'estimatedMinutes': task.estimatedMinutes,
@@ -39,6 +45,6 @@ class TaskRepository implements TaskRepositoryInterface {
   }
 
   Future delete(Task task) async {
-    return _tasksReference.document(task.uuid).delete();
+    return this.ref().doc(task.uuid).delete();
   }
 }
