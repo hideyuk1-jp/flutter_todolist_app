@@ -15,15 +15,14 @@ class TaskService implements TaskServiceInterface {
   TaskService(this.read);
 
   Future<Task> getTaskByUuid(String uuid) async {
-    DocumentSnapshot doc =
-        await read(taskRepository).ref().document(uuid).get();
+    DocumentSnapshot doc = await read(taskRepository).ref().doc(uuid).get();
     Task task = Task.fromSnapshot(doc);
     return task;
   }
 
   Stream<List<Task>> getTasks() {
     return read(taskRepository).ref().snapshots().asyncMap((snapshot) =>
-        snapshot.documents.map<Task>((doc) => Task.fromSnapshot(doc)).toList());
+        snapshot.docs.map<Task>((doc) => Task.fromSnapshot(doc)).toList());
   }
 
   Stream<List<Task>> getDones() {
@@ -33,7 +32,7 @@ class TaskService implements TaskServiceInterface {
         .snapshots()
         .asyncMap((snapshot) {
       List<Task> tasks = [];
-      snapshot.documents.forEach((doc) {
+      snapshot.docs.forEach((doc) {
         if (doc['completedAt'] != null) tasks.add(Task.fromSnapshot(doc));
       });
       return tasks;
@@ -47,9 +46,8 @@ class TaskService implements TaskServiceInterface {
         .orderBy('dueDate')
         .orderBy('createdAt')
         .snapshots()
-        .asyncMap((snapshot) => snapshot.documents
-            .map<Task>((doc) => Task.fromSnapshot(doc))
-            .toList());
+        .asyncMap((snapshot) =>
+            snapshot.docs.map<Task>((doc) => Task.fromSnapshot(doc)).toList());
   }
 
   Future create(String text, DateTime dueDate, int estimatedMinutes) async {

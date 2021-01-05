@@ -34,7 +34,7 @@ class Task {
             : null;
 
   Task.fromSnapshot(DocumentSnapshot snapshot)
-      : this.uuid = snapshot.documentID,
+      : this.uuid = snapshot.id,
         this.text = snapshot['text'],
         this.dueDate = snapshot['dueDate'],
         this.estimatedMinutes = snapshot['estimatedMinutes'],

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_todolist_app/user_view_model.dart';
 import 'package:gradient_app_bar/gradient_app_bar.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:flutter_todolist_app/common_parts.dart';
 import 'package:flutter_todolist_app/pages/todos_page.dart';
@@ -37,9 +39,16 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: GradientAppBar(
-        title: Center(
-          child: Icon(Icons.style),
-        ),
+        title: Icon(Icons.style),
+        centerTitle: true,
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.exit_to_app),
+            onPressed: () async {
+              await context.read(userViewModelProvider).signOut();
+            },
+          )
+        ],
         backgroundColorStart: Colors.cyan,
         backgroundColorEnd: Colors.indigo,
       ),
