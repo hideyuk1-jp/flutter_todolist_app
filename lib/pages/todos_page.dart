@@ -356,6 +356,7 @@ class TodosPageBody extends HookWidget {
   }
 
   void _openUpdateFormModal(BuildContext context, Task task) {
+    context.read(updateFormProvider).loadTask(task);
     showModalBottomSheet(
       isScrollControlled: true,
       context: context,
@@ -380,10 +381,50 @@ class TodosPageBody extends HookWidget {
 final createFormProvider = ChangeNotifierProvider((ref) => FormNotifier());
 
 class FormNotifier with ChangeNotifier {
-  TextEditingController textController = TextEditingController();
-  bool isComposing = false;
-  DateTime dueDate = new DateTime.now();
-  double estimatedMinutes = 0.0;
+  TextEditingController _textController;
+  bool _isComposing;
+  DateTime _dueDate;
+  double _estimatedMinutes;
+
+  FormNotifier() {
+    _textController = TextEditingController();
+    _isComposing = false;
+    _dueDate = new DateTime.now();
+    _estimatedMinutes = 0.0;
+  }
+
+  TextEditingController get textController => _textController;
+  bool get isComposing => _isComposing;
+  DateTime get dueDate => _dueDate;
+  double get estimatedMinutes => _estimatedMinutes;
+
+  set textController(TextEditingController controller) {
+    _textController = controller;
+    notifyListeners();
+  }
+
+  set isComposing(bool flag) {
+    _isComposing = flag;
+    notifyListeners();
+  }
+
+  set dueDate(DateTime date) {
+    _dueDate = date;
+    notifyListeners();
+  }
+
+  set estimatedMinutes(double minutes) {
+    _estimatedMinutes = minutes;
+    notifyListeners();
+  }
+
+  void loadTask(Task task) {
+    _textController = TextEditingController(text: task.text);
+    _isComposing = task.text.length > 0;
+    _dueDate = DateTime.parse(task.dueDate);
+    _estimatedMinutes = task.estimatedMinutes.toDouble();
+    notifyListeners();
+  }
 }
 
 class TaskCreateFormWidget extends HookWidget {
@@ -601,15 +642,6 @@ class TaskUpdateFormWidget extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final updateForm = useProvider(updateFormProvider);
-
-    useEffect(() {
-      updateForm.textController = TextEditingController(text: task.text);
-      updateForm.isComposing = task.text.length > 0;
-      updateForm.dueDate = DateTime.parse(task.dueDate);
-      updateForm.estimatedMinutes = task.estimatedMinutes.toDouble();
-      return null;
-    }, const []);
-
     return SingleChildScrollView(
       child: Padding(
         padding:
